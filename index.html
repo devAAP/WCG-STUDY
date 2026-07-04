@@ -1479,6 +1479,294 @@ function updateProgress() {
 // Auto-save on page unload
 window.addEventListener('beforeunload', saveAll);
 </script>
+<!-- ════════════════════════════════════════════════════════════
+     DRAGGABLE FAB ENGINE — touch & mouse, both buttons
+     ════════════════════════════════════════════════════════════ -->
+<style>
+/* Override fixed positions — JS will control top/left instead */
+#audioFab, #aiFab {
+  /* Remove bottom/right — position now set by JS */
+  bottom: auto !important;
+  right: auto !important;
+  touch-action: none;        /* prevent scroll hijack during drag */
+  user-select: none;
+  cursor: grab;
+}
+#audioFab:active, #aiFab:active { cursor: grabbing; }
+
+/* Drag hint tooltip */
+.fab-drag-hint {
+  position: fixed; background: rgba(0,0,0,0.72); color: white;
+  font-size: 11px; padding: 4px 10px; border-radius: 12px;
+  pointer-events: none; z-index: 9999; white-space: nowrap;
+  transition: opacity 0.4s; opacity: 0;
+}
+.fab-drag-hint.show { opacity: 1; }
+
+/* Snap zones — subtle glow when near edge */
+#audioFab.snapping, #aiFab.snapping {
+  box-shadow: 0 0 0 3px rgba(184,134,11,0.6), 0 4px 18px rgba(0,0,0,0.3);
+  transition: box-shadow 0.15s;
+}
+
+/* Mini-player follows audio FAB */
+#audioMiniPlayer {
+  transition: top 0.2s, left 0.2s, right 0.2s, bottom 0.2s;
+}
+</style>
+
+<div class="fab-drag-hint" id="fabDragHint">Hold & drag to move</div>
+
+<script>
+(function() {
+  // ── CONFIGURATION ──────────────────────────────────────────
+  const SNAP_MARGIN   = 16;   // px from edge to snap to
+  const LONG_PRESS_MS = 400;  // ms hold before drag activates
+  const FAB_SIZE      = 52;   // px (matches CSS width/height)
+  const HINT_DURATION = 2200; // ms to show drag hint
+
+  // Default positions [top, left] in px — stored per FAB
+  const DEFAULTS = {
+    audioFab: { top: null, left: null },  // null = use bottom/right defaults
+    aiFab:    { top: null, left: null },
+  };
+
+  // ── LOAD SAVED POSITIONS ───────────────────────────────────
+  function loadPos(id) {
+    try {
+      const raw = localStorage.getItem('wcg_fab_pos_' + id);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+  function savePos(id, top, left) {
+    try { localStorage.setItem('wcg_fab_pos_' + id, JSON.stringify({top, left})); } catch {}
+  }
+
+  // ── APPLY POSITION to a FAB element ───────────────────────
+  function applyPos(el, top, left) {
+    el.style.top  = top  + 'px';
+    el.style.left = left + 'px';
+    el.style.bottom = 'auto';
+    el.style.right  = 'auto';
+  }
+
+  // ── SNAP TO NEAREST EDGE ──────────────────────────────────
+  function snapToEdge(el, top, left) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const midX = left + FAB_SIZE / 2;
+    const midY = top  + FAB_SIZE / 2;
+
+    // Clamp within viewport
+    left = Math.max(SNAP_MARGIN, Math.min(vw - FAB_SIZE - SNAP_MARGIN, left));
+    top  = Math.max(SNAP_MARGIN + 60, Math.min(vh - FAB_SIZE - 80, top));
+
+    // Snap horizontally if within 60px of either edge
+    if (midX < vw * 0.35) {
+      left = SNAP_MARGIN;
+    } else if (midX > vw * 0.65) {
+      left = vw - FAB_SIZE - SNAP_MARGIN;
+    }
+
+    return { top, left };
+  }
+
+  // ── REPOSITION MINI-PLAYER relative to audio FAB ──────────
+  function repositionMiniPlayer(audioFabTop, audioFabLeft) {
+    const mp = document.getElementById('audioMiniPlayer');
+    if (!mp) return;
+    const vw = window.innerWidth;
+    const mpW = Math.min(280, vw - 32);
+    // Place mini-player above the FAB
+    let mpTop  = audioFabTop - 160;
+    let mpLeft = audioFabLeft + FAB_SIZE - mpW;
+    // Keep in viewport
+    if (mpTop < 70) mpTop = audioFabTop + FAB_SIZE + 8;
+    if (mpLeft < 8) mpLeft = 8;
+    if (mpLeft + mpW > vw - 8) mpLeft = vw - mpW - 8;
+    mp.style.top    = mpTop + 'px';
+    mp.style.left   = mpLeft + 'px';
+    mp.style.bottom = 'auto';
+    mp.style.right  = 'auto';
+    mp.style.maxWidth = mpW + 'px';
+  }
+
+  // ── SHOW DRAG HINT ─────────────────────────────────────────
+  let hintTimer = null;
+  function showHint(x, y) {
+    const hint = document.getElementById('fabDragHint');
+    hint.style.top  = (y - 36) + 'px';
+    hint.style.left = (x - 60) + 'px';
+    hint.classList.add('show');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => hint.classList.remove('show'), HINT_DURATION);
+  }
+  function hideHint() {
+    document.getElementById('fabDragHint').classList.remove('show');
+    clearTimeout(hintTimer);
+  }
+
+  // ── MAKE DRAGGABLE ─────────────────────────────────────────
+  function makeDraggable(el) {
+    let startX, startY, startElX, startElY;
+    let dragging = false;
+    let longPressTimer = null;
+    let dragEnabled = false;
+    let hasMoved = false;
+    let currentTop, currentLeft;
+
+    // Initialise position
+    function initPosition() {
+      const saved = loadPos(el.id);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (saved) {
+        // Re-clamp saved position in case screen size changed
+        const clamped = snapToEdge(el, saved.top, saved.left);
+        applyPos(el, clamped.top, clamped.left);
+        currentTop  = clamped.top;
+        currentLeft = clamped.left;
+      } else {
+        // Default positions
+        let top, left;
+        if (el.id === 'audioFab') {
+          top  = vh - 88 - FAB_SIZE;
+          left = vw - FAB_SIZE - 18;
+        } else {
+          top  = vh - 148 - FAB_SIZE;
+          left = vw - FAB_SIZE - 18;
+        }
+        applyPos(el, top, left);
+        currentTop  = top;
+        currentLeft = left;
+      }
+      if (el.id === 'audioFab') repositionMiniPlayer(currentTop, currentLeft);
+    }
+
+    // ── POINTER DOWN ──
+    function onPointerDown(e) {
+      if (e.button && e.button !== 0) return; // ignore right-click
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      startX    = clientX;
+      startY    = clientY;
+      startElX  = currentLeft;
+      startElY  = currentTop;
+      hasMoved  = false;
+      dragEnabled = false;
+
+      // Long-press to activate drag
+      longPressTimer = setTimeout(() => {
+        dragEnabled = true;
+        dragging    = true;
+        el.classList.add('snapping');
+        showHint(clientX, clientY);
+        el.style.transition = 'none';
+        el.style.transform  = 'scale(1.12)';
+      }, LONG_PRESS_MS);
+    }
+
+    // ── POINTER MOVE ──
+    function onPointerMove(e) {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - startX;
+      const dy = clientY - startY;
+
+      // If moved too much before long press, cancel drag activation
+      if (!dragEnabled && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        clearTimeout(longPressTimer);
+      }
+
+      if (!dragging) return;
+      e.preventDefault();
+      hasMoved = true;
+      hideHint();
+
+      let newTop  = startElY + dy;
+      let newLeft = startElX + dx;
+
+      // Clamp
+      newTop  = Math.max(60, Math.min(window.innerHeight - FAB_SIZE - 80, newTop));
+      newLeft = Math.max(SNAP_MARGIN, Math.min(window.innerWidth - FAB_SIZE - SNAP_MARGIN, newLeft));
+
+      currentTop  = newTop;
+      currentLeft = newLeft;
+      applyPos(el, newTop, newLeft);
+
+      if (el.id === 'audioFab') repositionMiniPlayer(newTop, newLeft);
+    }
+
+    // ── POINTER UP ──
+    function onPointerUp(e) {
+      clearTimeout(longPressTimer);
+      el.classList.remove('snapping');
+      el.style.transform = '';
+      el.style.transition = '';
+
+      if (dragging && hasMoved) {
+        // Snap to edge
+        const snapped = snapToEdge(el, currentTop, currentLeft);
+        currentTop  = snapped.top;
+        currentLeft = snapped.left;
+        el.style.transition = 'top 0.2s, left 0.2s';
+        applyPos(el, currentTop, currentLeft);
+        savePos(el.id, currentTop, currentLeft);
+        if (el.id === 'audioFab') {
+          setTimeout(() => repositionMiniPlayer(currentTop, currentLeft), 210);
+        }
+        // Prevent the click from firing after a drag
+        el.dataset.justDragged = '1';
+        setTimeout(() => delete el.dataset.justDragged, 300);
+      }
+      dragging    = false;
+      dragEnabled = false;
+      hasMoved    = false;
+    }
+
+    // ── BLOCK CLICK AFTER DRAG ──
+    el.addEventListener('click', e => {
+      if (el.dataset.justDragged) e.stopImmediatePropagation();
+    }, true);
+
+    // ── ATTACH EVENTS ──
+    el.addEventListener('mousedown',  onPointerDown);
+    el.addEventListener('touchstart', onPointerDown, { passive: true });
+    document.addEventListener('mousemove',  onPointerMove);
+    document.addEventListener('touchmove',  onPointerMove, { passive: false });
+    document.addEventListener('mouseup',    onPointerUp);
+    document.addEventListener('touchend',   onPointerUp);
+
+    // Re-init position on orientation change / resize
+    window.addEventListener('resize', () => {
+      const snapped = snapToEdge(el, currentTop, currentLeft);
+      currentTop  = snapped.top;
+      currentLeft = snapped.left;
+      applyPos(el, currentTop, currentLeft);
+      if (el.id === 'audioFab') repositionMiniPlayer(currentTop, currentLeft);
+    });
+
+    initPosition();
+  }
+
+  // ── INIT when DOM is ready ─────────────────────────────────
+  function initDraggable() {
+    const audioFab = document.getElementById('audioFab');
+    const aiFab    = document.getElementById('aiFab');
+    if (audioFab) makeDraggable(audioFab);
+    if (aiFab)    makeDraggable(aiFab);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDraggable);
+  } else {
+    setTimeout(initDraggable, 600);
+  }
+})();
+</script>
+
+
 
 <!-- ════════════════════════════════════════════════════════════
      WOL DEEP LINK ENGINE — styles
