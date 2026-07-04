@@ -96,14 +96,25 @@
     color: #E8D5B0;
   }
   .top-bar .logo span { color: #7BAFD4; font-weight: 300; font-size: 12px; display: block; margin-top: 1px; }
-  .top-bar .nav-actions { display: flex; gap: 14px; align-items: center; }
+  .top-bar { flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
+  .top-bar .nav-actions {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  }
   .top-bar .nav-actions button {
     background: none; border: 1px solid rgba(255,255,255,0.3);
-    color: #ddd; padding: 4px 12px; border-radius: 3px;
-    font-size: 12px; cursor: pointer; font-family: var(--sans);
-    transition: all 0.2s;
+    color: #ddd; padding: 5px 9px; border-radius: 5px;
+    font-size: 11px; cursor: pointer; font-family: var(--sans);
+    transition: all 0.2s; white-space: nowrap;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 44px;
   }
   .top-bar .nav-actions button:hover { background: rgba(255,255,255,0.15); color: white; }
+  .top-bar .logo { font-size: 13px; }
+  .top-bar .logo span { font-size: 11px; }
+  @media (max-width: 480px) {
+    .top-bar { padding: 6px 10px; }
+    .top-bar .nav-actions button { padding: 4px 7px; font-size: 10px; min-width: 38px; }
+  }
   .save-indicator {
     font-size: 11px; color: #8FC; padding: 3px 8px;
     background: rgba(0,150,0,0.25); border-radius: 3px;
@@ -541,11 +552,11 @@
   </div>
   <div class="nav-actions">
     <span class="save-indicator" id="saveIndicator">✓ Saved</span>
-    <button onclick="saveAll()">💾 Save</button>
-    <button onclick="exportData()">📤 Export</button>
-    <button onclick="importData()">📥 Import</button>
-    <button onclick="clearChapter()">🗑 Clear</button>
-    <button onclick="window.print()">🖨 Print</button>
+    <button onclick="saveAll()"><span style="font-size:16px">💾</span>Save</button>
+    <button onclick="exportData()"><span style="font-size:16px">📤</span>Export</button>
+    <button onclick="importData()"><span style="font-size:16px">📥</span>Import</button>
+    <button onclick="clearChapter()"><span style="font-size:16px">🗑</span>Clear</button>
+    <button onclick="window.print()"><span style="font-size:16px">🖨</span>Print</button>
   </div>
 </div>
 
@@ -1483,16 +1494,14 @@ window.addEventListener('beforeunload', saveAll);
      DRAGGABLE FAB ENGINE — touch & mouse, both buttons
      ════════════════════════════════════════════════════════════ -->
 <style>
-/* Override fixed positions — JS will control top/left instead */
+/* Drag-enabled FABs — touch support */
 #audioFab, #aiFab {
-  /* Remove bottom/right — position now set by JS */
-  bottom: auto !important;
-  right: auto !important;
-  touch-action: none;        /* prevent scroll hijack during drag */
+  touch-action: none;
   user-select: none;
   cursor: grab;
 }
 #audioFab:active, #aiFab:active { cursor: grabbing; }
+/* Once JS has set top/left, hide bottom/right via JS directly */
 
 /* Drag hint tooltip */
 .fab-drag-hint {
@@ -1620,26 +1629,26 @@ window.addEventListener('beforeunload', saveAll);
       const saved = loadPos(el.id);
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      if (saved) {
+      if (saved && saved.top && saved.left) {
         // Re-clamp saved position in case screen size changed
         const clamped = snapToEdge(el, saved.top, saved.left);
-        applyPos(el, clamped.top, clamped.left);
         currentTop  = clamped.top;
         currentLeft = clamped.left;
       } else {
-        // Default positions
-        let top, left;
+        // Default positions — keep near bottom-right but fully in viewport
         if (el.id === 'audioFab') {
-          top  = vh - 88 - FAB_SIZE;
-          left = vw - FAB_SIZE - 18;
+          currentTop  = vh - 100 - FAB_SIZE;
+          currentLeft = vw - FAB_SIZE - 18;
         } else {
-          top  = vh - 148 - FAB_SIZE;
-          left = vw - FAB_SIZE - 18;
+          currentTop  = vh - 162 - FAB_SIZE;
+          currentLeft = vw - FAB_SIZE - 18;
         }
-        applyPos(el, top, left);
-        currentTop  = top;
-        currentLeft = left;
       }
+      // Apply top/left and clear bottom/right so they don't conflict
+      el.style.top    = currentTop + 'px';
+      el.style.left   = currentLeft + 'px';
+      el.style.bottom = 'auto';
+      el.style.right  = 'auto';
       if (el.id === 'audioFab') repositionMiniPlayer(currentTop, currentLeft);
     }
 
@@ -2100,13 +2109,17 @@ _wd.addEventListener('touchmove',e=>{if(e.touches[0].clientY-_tsy>60)closeWolDra
 <style>
 /* ── FLOATING AUDIO BUTTON ── */
 #audioFab {
-  position: fixed; bottom: 88px; right: 18px;
+  position: fixed;
+  /* Safe default — JS will override with saved/calculated position */
+  bottom: 88px; right: 18px;
+  top: auto; left: auto;
   width: 52px; height: 52px; border-radius: 50%;
   background: #8B3A0F; color: white;
   border: none; font-size: 22px; cursor: pointer;
   box-shadow: 0 4px 16px rgba(139,58,15,0.45);
   z-index: 490; display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s; flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s; flex-shrink: 0;
+  /* Always visible by default — JS hides/shows via display */
 }
 #audioFab:hover { background: #A04510; transform: scale(1.07); }
 #audioFab.playing { background: #2E6B3E; box-shadow: 0 4px 16px rgba(46,107,62,0.45); animation: pulse 1.8s infinite; }
@@ -2115,7 +2128,10 @@ _wd.addEventListener('touchmove',e=>{if(e.touches[0].clientY-_tsy>60)closeWolDra
 
 /* ── AUDIO MINI-PLAYER (above FAB) ── */
 #audioMiniPlayer {
-  position: fixed; bottom: 148px; right: 12px;
+  position: fixed;
+  /* JS will position this relative to audioFab */
+  bottom: 162px; right: 12px;
+  top: auto; left: auto;
   background: #1A3A5C; color: white;
   border-radius: 14px; padding: 10px 14px;
   min-width: 220px; max-width: 280px;
@@ -2186,7 +2202,7 @@ _wd.addEventListener('touchmove',e=>{if(e.touches[0].clientY-_tsy>60)closeWolDra
 </style>
 
 <!-- ── FLOATING AUDIO BUTTON ── -->
-<button id="audioFab" title="Audio player" onclick="toggleMiniPlayer()" style="display:none">🎵</button>
+<button id="audioFab" title="Audio player — hold to drag" onclick="toggleMiniPlayer()" style="display:none">🎵</button>
 <div id="audioMiniPlayer">
   <div class="amp-title" id="ampTitle">NWT Audio</div>
   <div class="amp-sub" id="ampSub">Ready to play</div>
@@ -2612,14 +2628,17 @@ document.addEventListener('visibilitychange', () => {
 <style>
 /* ── AI FAB BUTTON ── */
 #aiFab {
-  position: fixed; bottom: 148px; right: 18px;
+  position: fixed;
+  /* Safe default — JS will override with saved/calculated position */
+  bottom: 152px; right: 18px;
+  top: auto; left: auto;
   width: 52px; height: 52px; border-radius: 50%;
   background: linear-gradient(135deg, #1A3A5C, #2E6B8C);
   color: white; border: none; font-size: 22px;
   cursor: pointer; z-index: 491;
   box-shadow: 0 4px 18px rgba(26,58,92,0.5);
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 #aiFab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(26,58,92,0.6); }
 #aiFab .ai-badge {
