@@ -96,25 +96,29 @@
     color: #E8D5B0;
   }
   .top-bar .logo span { color: #7BAFD4; font-weight: 300; font-size: 12px; display: block; margin-top: 1px; }
-  .top-bar { flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
-  .top-bar .nav-actions {
-    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  .top-bar {
+    flex-direction: column; gap: 0; padding: 0;
+    align-items: stretch;
   }
-  .top-bar .nav-actions button {
-    background: none; border: 1px solid rgba(255,255,255,0.3);
-    color: #ddd; padding: 5px 9px; border-radius: 5px;
-    font-size: 11px; cursor: pointer; font-family: var(--sans);
-    transition: all 0.2s; white-space: nowrap;
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
-    min-width: 44px;
+  .top-bar-row1 {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px 4px;
   }
-  .top-bar .nav-actions button:hover { background: rgba(255,255,255,0.15); color: white; }
+  .top-bar-row2 {
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 4px 8px 8px; gap: 4px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .top-bar-row2 button {
+    flex: 1; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #ddd; padding: 6px 4px; border-radius: 6px;
+    font-size: 12px; cursor: pointer; font-family: var(--sans);
+    transition: all 0.2s; white-space: nowrap; text-align: center;
+  }
+  .top-bar-row2 button:hover { background: rgba(255,255,255,0.2); color: white; }
   .top-bar .logo { font-size: 13px; }
-  .top-bar .logo span { font-size: 11px; }
-  @media (max-width: 480px) {
-    .top-bar { padding: 6px 10px; }
-    .top-bar .nav-actions button { padding: 4px 7px; font-size: 10px; min-width: 38px; }
-  }
+  .top-bar .logo span { font-size: 10px; color: #7BAFD4; display: block; margin-top: 1px; }
   .save-indicator {
     font-size: 11px; color: #8FC; padding: 3px 8px;
     background: rgba(0,150,0,0.25); border-radius: 3px;
@@ -546,17 +550,19 @@
 
 <!-- TOP NAV -->
 <div class="top-bar">
-  <div class="logo">
-    Watchtower ONLINE LIBRARY
-    <span>Interactive Study Worksheet</span>
-  </div>
-  <div class="nav-actions">
+  <div class="top-bar-row1">
+    <div class="logo">
+      Watchtower ONLINE LIBRARY
+      <span>Interactive Study Worksheet</span>
+    </div>
     <span class="save-indicator" id="saveIndicator">✓ Saved</span>
-    <button onclick="saveAll()"><span style="font-size:16px">💾</span>Save</button>
-    <button onclick="exportData()"><span style="font-size:16px">📤</span>Export</button>
-    <button onclick="importData()"><span style="font-size:16px">📥</span>Import</button>
-    <button onclick="clearChapter()"><span style="font-size:16px">🗑</span>Clear</button>
-    <button onclick="window.print()"><span style="font-size:16px">🖨</span>Print</button>
+  </div>
+  <div class="top-bar-row2">
+    <button onclick="saveAll()">💾 Save</button>
+    <button onclick="exportData()">📤 Export</button>
+    <button onclick="importData()">📥 Import</button>
+    <button onclick="clearChapter()">🗑 Clear</button>
+    <button onclick="window.print()">🖨 Print</button>
   </div>
 </div>
 
@@ -610,7 +616,589 @@
         <span style="color:#E8D5B0; font-size:13px; font-weight:700; font-family:var(--serif);">📍 Bible Timeline</span>
         <button onclick="closeTimeline()" style="background:rgba(255,255,255,0.15); border:none; color:white; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
       </div>
-      <iframe id="timelineFrame" src="" style="flex:1; border:none; width:100%; background:white;"></iframe>
+      <iframe id="timelineFrame" srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot;>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, viewport-fit=cover&quot;>
+<title>Interactive Timeline — Walk Courageously With God</title>
+<style>
+  @import url(&#39;https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+3:wght@300;400;600;700&amp;display=swap&#39;);
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --jw-brown:    #8B3A0F;
+    --jw-orange:   #C0530A;
+    --jw-blue:     #2E6DA4;
+    --jw-blue-ref: #1A75B8;
+    --jw-divider:  #A0440E;
+    --jw-bg:       #FFFFFF;
+    --jw-input-bg: #E8E8E8;
+    --jw-input-border: #CCCCCC;
+    --jw-text:     #1A1A1A;
+    --jw-sub:      #444444;
+    --jw-label:    #555555;
+    --jw-sidebar:  #F5F0EB;
+    --jw-sidebar-border: #D4C5B0;
+    --jw-badge-bg: #F0E8DC;
+    --serif:       &#39;Noto Serif&#39;, Georgia, serif;
+    --sans:        &#39;Source Sans 3&#39;, &#39;Helvetica Neue&#39;, sans-serif;
+
+    /* Era colors */
+    --era1: #6B5B95;  /* Pre-Flood — deep violet */
+    --era2: #2E6DA4;  /* Patriarchs — blue */
+    --era3: #3A7A5C;  /* Exodus/Conquest — green */
+    --era4: #C0530A;  /* Judges — orange */
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    color: var(--jw-text);
+    background: #F2EDE8;
+    line-height: 1.5;
+    padding-bottom: 40px;
+  }
+
+  /* ── HEADER ── */
+  .tl-header {
+    background: linear-gradient(135deg, #1A3A5C 0%, #2A5A8C 60%, #1A3A5C 100%);
+    padding: 24px 20px 20px;
+    color: white;
+  }
+  .tl-header .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: #8FC3E8; margin-bottom: 8px;
+  }
+  .tl-header h1 {
+    font-family: var(--serif); font-size: 24px; color: #F5EDD5;
+    margin-bottom: 4px;
+  }
+  .tl-header .sub { font-size: 13px; color: #9BC0DC; font-style: italic; }
+
+  /* ── CONTROLS BAR ── */
+  .controls {
+    background: white; border-bottom: 1px solid var(--jw-sidebar-border);
+    padding: 12px 16px; display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .zoom-btns { display: flex; gap: 4px; margin-left: auto; }
+  .zoom-btns button, .view-btn {
+    background: var(--jw-sidebar); border: 1px solid var(--jw-sidebar-border);
+    color: var(--jw-brown); padding: 6px 12px; border-radius: 6px;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+  }
+  .zoom-btns button:hover, .view-btn:hover { background: var(--jw-badge-bg); }
+  .view-btn.active { background: var(--jw-brown); color: white; border-color: var(--jw-brown); }
+  .era-filter {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .era-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 14px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent; transition: all 0.15s;
+    background: var(--jw-sidebar); color: var(--jw-sub);
+  }
+  .era-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .era-chip.active { border-color: currentColor; }
+  .era-chip[data-era=&quot;1&quot;].active { color: var(--era1); background: #6B5B9518; }
+  .era-chip[data-era=&quot;2&quot;].active { color: var(--era2); background: #2E6DA418; }
+  .era-chip[data-era=&quot;3&quot;].active { color: var(--era3); background: #3A7A5C18; }
+  .era-chip[data-era=&quot;4&quot;].active { color: var(--era4); background: #C0530A18; }
+
+  /* ── WORLD POWER BAND ── */
+  .power-band-wrap {
+    background: #F7F3EE; padding: 10px 16px 4px;
+    border-bottom: 1px solid var(--jw-sidebar-border);
+    overflow-x: auto;
+  }
+  .power-band-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--jw-label); margin-bottom: 6px;
+  }
+  .power-band {
+    display: flex; min-width: 1600px; height: 28px; border-radius: 4px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .power-seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: white;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 0 6px; cursor: default;
+  }
+
+  /* ── TIMELINE CONTAINER ── */
+  .tl-scroll {
+    overflow-x: auto; overflow-y: hidden;
+    background: white;
+    padding: 30px 0 10px;
+    position: relative;
+  }
+  .tl-track {
+    position: relative;
+    min-width: 1600px;
+    height: auto;
+    padding: 0 40px;
+  }
+  .tl-axis-line {
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--era1), var(--era2), var(--era3), var(--era4));
+    border-radius: 2px; transform: translateY(-50%);
+  }
+
+  /* ── CHARACTER NODES ── */
+  .char-node {
+    position: absolute; top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; transition: all 0.2s; z-index: 5;
+  }
+  .char-node.above { flex-direction: column-reverse; }
+  .char-node .node-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: all 0.2s;
+  }
+  .char-node:hover .node-dot { transform: scale(1.4); box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+  .char-node .node-line { width: 1.5px; height: 22px; background: var(--jw-sidebar-border); }
+  .char-node .node-label {
+    font-size: 10px; font-weight: 700; color: var(--jw-text);
+    background: white; padding: 2px 6px; border-radius: 4px;
+    white-space: nowrap; margin-top: 2px; margin-bottom: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+  }
+  .char-node:hover .node-label { background: var(--jw-badge-bg); }
+  .char-node.dimmed { opacity: 0.15; pointer-events: none; }
+  .char-node.read .node-dot { box-shadow: 0 0 0 3px #3A7A5C40, 0 2px 6px rgba(0,0,0,0.25); }
+  .char-node.read .node-label::after { content: &#39; ✓&#39;; color: #3A7A5C; }
+
+  /* ── ERA LABELS ON TRACK ── */
+  .era-band-label {
+    position: absolute; top: -22px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--jw-label);
+  }
+
+  /* ── CHARACTER DETAIL PANEL ── */
+  .detail-panel {
+    background: var(--jw-bg);
+    border-top: 4px solid var(--jw-divider);
+    margin: 0;
+    padding: 0;
+    display: none;
+  }
+  .detail-panel.open { display: block; animation: slideDown 0.25s ease; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .detail-inner { padding: 20px; max-width: 700px; margin: 0 auto; }
+  .detail-close {
+    float: right; background: var(--jw-sidebar); border: none;
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 14px; color: var(--jw-brown); font-weight: 700;
+  }
+  .detail-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--jw-orange); margin-bottom: 4px;
+  }
+  .detail-title {
+    font-family: var(--serif); font-size: 22px; font-weight: 700;
+    color: var(--jw-text); margin-bottom: 2px;
+  }
+  .detail-sub {
+    font-family: var(--serif); font-style: italic; font-size: 14px;
+    color: var(--jw-sub); margin-bottom: 14px;
+  }
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .detail-cell {
+    background: var(--jw-sidebar); border-radius: 6px; padding: 8px 12px;
+  }
+  .detail-cell label {
+    display: block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--jw-label); margin-bottom: 2px;
+  }
+  .detail-cell span { font-size: 13px; color: var(--jw-text); font-weight: 600; }
+  .detail-context {
+    font-size: 13px; color: var(--jw-sub); line-height: 1.6; margin-bottom: 14px;
+    padding: 12px 14px; background: var(--jw-badge-bg);
+    border-left: 3px solid var(--jw-orange); border-radius: 0 4px 4px 0;
+  }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .detail-actions button {
+    background: var(--jw-brown); color: white; border: none;
+    padding: 9px 16px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: var(--sans);
+  }
+  .detail-actions button.secondary {
+    background: white; color: var(--jw-brown); border: 1.5px solid var(--jw-brown);
+  }
+  .mark-read-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--jw-sub); margin-left: auto; }
+
+  /* ── LIST VIEW (mobile-friendly alternative) ── */
+  .list-view { display: none; padding: 16px; }
+  .list-view.active { display: block; }
+  .list-era-group { margin-bottom: 20px; }
+  .list-era-title {
+    font-family: var(--serif); font-size: 16px; font-weight: 700;
+    padding: 8px 12px; border-radius: 6px; color: white; margin-bottom: 8px;
+  }
+  .list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border: 1px solid var(--jw-sidebar-border);
+    border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+    background: white; transition: all 0.15s;
+  }
+  .list-item:hover { background: var(--jw-sidebar); border-color: var(--jw-brown); }
+  .list-item .li-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .list-item .li-text { flex: 1; }
+  .list-item .li-name { font-size: 13px; font-weight: 700; color: var(--jw-text); }
+  .list-item .li-meta { font-size: 11px; color: var(--jw-label); }
+  .list-item .li-check { color: #3A7A5C; font-size: 14px; }
+
+  /* ── PROGRESS SUMMARY ── */
+  .progress-summary {
+    display: flex; gap: 16px; padding: 14px 20px; background: #F7F3EE;
+    border-top: 1px solid var(--jw-sidebar-border); flex-wrap: wrap;
+  }
+  .ps-item { font-size: 12px; color: var(--jw-label); }
+  .ps-item strong { color: var(--jw-brown); font-size: 14px; }
+
+  /* ── LEGEND ── */
+  .legend-hint {
+    text-align: center; font-size: 11px; color: var(--jw-label);
+    padding: 8px; font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .controls { padding: 10px; }
+    .zoom-btns { display: none; }
+    .detail-inner { padding: 16px; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class=&quot;tl-header&quot;>
+  <div class=&quot;eyebrow&quot;>Section 1 · Patriarchs to Judges</div>
+  <h1>📍 Interactive Bible Timeline</h1>
+  <div class=&quot;sub&quot;>Walk Courageously With God — Chapters 1–21</div>
+</div>
+
+<div class=&quot;controls&quot;>
+  <button class=&quot;view-btn active&quot; id=&quot;btnTimeline&quot; onclick=&quot;setView(&#39;timeline&#39;)&quot;>📊 Timeline</button>
+  <button class=&quot;view-btn&quot; id=&quot;btnList&quot; onclick=&quot;setView(&#39;list&#39;)&quot;>📋 List</button>
+  <div class=&quot;era-filter&quot; id=&quot;eraFilter&quot;></div>
+  <div class=&quot;zoom-btns&quot;>
+    <button onclick=&quot;zoom(0.8)&quot;>−</button>
+    <button onclick=&quot;zoom(1.25)&quot;>+</button>
+    <button onclick=&quot;resetZoom()&quot;>Reset</button>
+  </div>
+</div>
+
+<div class=&quot;power-band-wrap&quot; id=&quot;powerBandWrap&quot;>
+  <div class=&quot;power-band-label&quot;>World Powers &amp;amp; Dominant Cultures</div>
+  <div class=&quot;power-band&quot; id=&quot;powerBand&quot;></div>
+</div>
+
+<div class=&quot;tl-scroll&quot; id=&quot;tlScroll&quot;>
+  <div class=&quot;tl-track&quot; id=&quot;tlTrack&quot;>
+    <div class=&quot;tl-axis-line&quot;></div>
+  </div>
+</div>
+
+<div class=&quot;legend-hint&quot;>Tap any character to see historical context · Era colors match chapter sections</div>
+
+<div class=&quot;detail-panel&quot; id=&quot;detailPanel&quot;>
+  <div class=&quot;detail-inner&quot; id=&quot;detailInner&quot;></div>
+</div>
+
+<div class=&quot;list-view&quot; id=&quot;listView&quot;></div>
+
+<div class=&quot;progress-summary&quot;>
+  <div class=&quot;ps-item&quot;><strong id=&quot;psRead&quot;>0</strong> of 21 characters explored</div>
+  <div class=&quot;ps-item&quot;><strong id=&quot;psEra&quot;>4</strong> historical eras covered</div>
+  <div class=&quot;ps-item&quot;><strong>~2,400 years</strong> spanned (Enoch → Samuel)</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA MODEL — Section 1 Characters (Patriarchs to Judges)
+// Years are approximate, before common era (BCE), per Bible chronology
+// ═══════════════════════════════════════════════════════════
+const CHARACTERS = [
+  { id:&#39;ch1&#39;,  name:&#39;Enoch&#39;,                 ch:1,  year:-3300, era:1, title:&#39;He Walked With God&#39;,
+    context:&#39;7th generation from Adam. Lived alongside Adam for 308 years. First prophet — warned of coming judgment in a violent, godless world.&#39;,
+    power:&#39;No organized empire — Cainite civilization dominated culturally&#39; },
+  { id:&#39;ch2&#39;,  name:&#39;Noah&#39;,                  ch:2,  year:-2500, era:1, title:&#39;He Condemned the World&#39;,
+    context:&#39;10th generation from Adam. Built the ark over decades amid mockery and Nephilim violence. His faithfulness condemned his entire generation.&#39;,
+    power:&#39;Nephilim (&quot;Fellers&quot;) dominated; pre-Babel, no nations yet&#39; },
+  { id:&#39;ch3&#39;,  name:&#39;Sarah&#39;,                 ch:3,  year:-2000, era:2, title:&#39;She Refused to Look Back&#39;,
+    context:&#39;Wife of Abraham. Left the prosperous city of Ur for a nomadic life in Canaan, trusting Jehovah\&#39;s promise of a homeland.&#39;,
+    power:&#39;Ur of the Chaldeans (Sumerian city-state) — highly advanced urban culture&#39; },
+  { id:&#39;ch4&#39;,  name:&#39;Abraham&#39;,               ch:4,  year:-1990, era:2, title:&#39;The First Man to Wage a Righteous War&#39;,
+    context:&#39;Rescued his nephew Lot from four kings with a small household militia — demonstrating both courage and reliance on Jehovah.&#39;,
+    power:&#39;Mesopotamian city-state alliances (Elam, Shinar, Ellasar, Goiim)&#39; },
+  { id:&#39;ch5&#39;,  name:&#39;Abraham&#39;,               ch:5,  year:-1980, era:2, title:&#39;He Faced His Hardest Challenge&#39;,
+    context:&#39;Commanded to offer Isaac on Mount Moriah — the ultimate test of faith, foreshadowing God\&#39;s own sacrifice of his Son.&#39;,
+    power:&#39;Canaanite city-states; Egypt as regional power to the south&#39; },
+  { id:&#39;ch6&#39;,  name:&#39;Rebekah&#39;,               ch:6,  year:-1960, era:2, title:&#39;She Ventured Into the Unknown&#39;,
+    context:&#39;Left her family in Paddan-aram to marry Isaac, a man she had never met, trusting Jehovah\&#39;s guidance through Abraham\&#39;s servant.&#39;,
+    power:&#39;Aramean tribal region (Paddan-aram / Haran)&#39; },
+  { id:&#39;ch7&#39;,  name:&#39;Jacob&#39;,                 ch:7,  year:-1900, era:2, title:&#39;He Faced Danger to Protect His Family&#39;,
+    context:&#39;Wrestled with an angel and faced reconciliation with Esau, whom he had wronged 20 years earlier — courage to confront the past.&#39;,
+    power:&#39;Canaan under regional tribal chieftains&#39; },
+  { id:&#39;ch8&#39;,  name:&#39;Joseph&#39;,                ch:8,  year:-1880, era:2, title:&#39;He Resisted Temptation&#39;,
+    context:&#39;Sold into slavery by his brothers, resisted Potiphar\&#39;s wife, and rose to become Egypt\&#39;s second-in-command under Pharaoh.&#39;,
+    power:&#39;Egypt — Middle Kingdom, a major ancient superpower&#39; },
+  { id:&#39;ch9&#39;,  name:&#39;Shiphrah, Puah &amp; Family&#39;, ch:9, year:-1530, era:3, title:&#39;They Refused to Fear Man&#39;,
+    context:&#39;Hebrew midwives defied Pharaoh\&#39;s genocide order; Moses\&#39; parents hid him; his sister Miriam bravely watched over him at the river.&#39;,
+    power:&#39;Egypt — New Kingdom, peak imperial power, enslaving the Israelites&#39; },
+  { id:&#39;ch10&#39;, name:&#39;Moses&#39;,                 ch:10, year:-1530, era:3, title:&#39;He Made His Choice&#39;,
+    context:&#39;Raised in Pharaoh\&#39;s household, Moses chose to identify with his enslaved people rather than enjoy Egyptian privilege.&#39;,
+    power:&#39;Egypt — New Kingdom (likely 18th Dynasty)&#39; },
+  { id:&#39;ch11&#39;, name:&#39;Moses&#39;,                 ch:11, year:-1513, era:3, title:&#39;&quot;Go In to Pharaoh&quot;&#39;,
+    context:&#39;Confronted Pharaoh repeatedly, demanding Israel\&#39;s release, through ten devastating plagues that broke Egyptian power.&#39;,
+    power:&#39;Egypt — New Kingdom, at the height of its military might&#39; },
+  { id:&#39;ch12&#39;, name:&#39;Caleb&#39;,                 ch:12, year:-1512, era:3, title:&#39;He Fought Loyally for His God&#39;,
+    context:&#39;One of only two faithful spies among twelve sent into Canaan; waited 40 extra years to finally claim his inheritance at age 85.&#39;,
+    power:&#39;Canaanite city-states with fortified, &quot;giant&quot;-inhabited cities&#39; },
+  { id:&#39;ch13&#39;, name:&#39;Joshua&#39;,                ch:13, year:-1473, era:3, title:&#39;He Followed Unusual Instructions&#39;,
+    context:&#39;Led Israel across the Jordan and conquered Jericho by marching around its walls for seven days — pure obedience over military logic.&#39;,
+    power:&#39;Canaanite city-state confederation; Jericho a major fortified city&#39; },
+  { id:&#39;ch14&#39;, name:&#39;Rahab&#39;,                 ch:14, year:-1473, era:3, title:&#39;She Chose Jehovah Over Her Own People&#39;,
+    context:&#39;A Canaanite woman in Jericho who hid Israelite spies, risking execution, because she recognized Jehovah as the true God.&#39;,
+    power:&#39;Jericho — fortified Canaanite city-state, soon to fall&#39; },
+  { id:&#39;ch15&#39;, name:&#39;Naomi &amp; Ruth&#39;,          ch:15, year:-1150, era:4, title:&#39;They Faced Tragedy Together&#39;,
+    context:&#39;Naomi lost her husband and sons in Moab; her Moabite daughter-in-law Ruth chose loyalty to Naomi and to Jehovah over her homeland.&#39;,
+    power:&#39;Period of the Judges — Israel decentralized; Moab a regional kingdom&#39; },
+  { id:&#39;ch16&#39;, name:&#39;Barak &amp; Deborah&#39;,       ch:16, year:-1230, era:4, title:&#39;&quot;I Will Certainly Go With You&quot;&#39;,
+    context:&#39;Deborah, a prophetess and judge, rallied Barak to battle against Canaanite General Sisera\&#39;s 900 iron chariots.&#39;,
+    power:&#39;Canaanite city-state of Hazor under King Jabin, dominant in the north&#39; },
+  { id:&#39;ch17&#39;, name:&#39;Jael&#39;,                  ch:17, year:-1230, era:4, title:&#39;&quot;Most Blessed of Women&quot;&#39;,
+    context:&#39;A Kenite woman who killed the fleeing General Sisera in her tent, fulfilling Deborah\&#39;s prophecy that a woman would get the credit.&#39;,
+    power:&#39;Same era as Barak/Deborah — Canaanite military collapse&#39; },
+  { id:&#39;ch18&#39;, name:&#39;Gideon&#39;,                ch:18, year:-1180, era:4, title:&#39;Courageous and Cautious&#39;,
+    context:&#39;Reduced his army from 32,000 to just 300 men at Jehovah\&#39;s direction, then routed the vast Midianite camel-raiding hordes.&#39;,
+    power:&#39;Midianite and Amalekite nomadic confederations raiding Israel&#39; },
+  { id:&#39;ch19&#39;, name:&#39;Jephthah &amp; Daughter&#39;,   ch:19, year:-1100, era:4, title:&#39;They Fulfilled a Difficult Vow&#39;,
+    context:&#39;Jephthah, a former outcast, led Israel against the Ammonites; his daughter willingly honored his vow of dedicated service.&#39;,
+    power:&#39;Ammonite kingdom east of the Jordan, pressing into Israelite territory&#39; },
+  { id:&#39;ch20&#39;, name:&#39;Samson&#39;,                ch:20, year:-1075, era:4, title:&#39;He Found Courage in a Time of Weakness&#39;,
+    context:&#39;Despite his failures and Delilah\&#39;s betrayal, Samson\&#39;s final prayer for renewed strength brought down the Philistine temple.&#39;,
+    power:&#39;Philistine city-state confederation (Pentapolis) — Israel\&#39;s chief oppressor&#39; },
+  { id:&#39;ch21&#39;, name:&#39;Samuel&#39;,                ch:21, year:-1070, era:4, title:&#39;A Boy Who Spoke Up for Jehovah&#39;,
+    context:&#39;As a young boy serving at the tabernacle under corrupt priest Eli, Samuel courageously delivered Jehovah\&#39;s judgment message.&#39;,
+    power:&#39;Philistines dominant militarily; Israel\&#39;s priesthood corrupted under Eli\&#39;s sons&#39; },
+];
+
+const ERAS = {
+  1: { name:&#39;Pre-Flood&#39;,          color:&#39;#6B5B95&#39;, range:&#39;~3300–2400 BCE&#39; },
+  2: { name:&#39;Patriarchs&#39;,         color:&#39;#2E6DA4&#39;, range:&#39;~2000–1880 BCE&#39; },
+  3: { name:&#39;Exodus &amp; Conquest&#39;,  color:&#39;#3A7A5C&#39;, range:&#39;~1530–1470 BCE&#39; },
+  4: { name:&#39;Judges&#39;,             color:&#39;#C0530A&#39;, range:&#39;~1230–1070 BCE&#39; },
+};
+
+const POWER_SEGMENTS = [
+  { label:&#39;Pre-Flood World&#39;,        color:&#39;#6B5B95&#39;, start:-3300, end:-2400 },
+  { label:&#39;Mesopotamian City-States&#39;, color:&#39;#7A6FA0&#39;, start:-2400, end:-1990 },
+  { label:&#39;Canaanite Tribal Lands&#39;, color:&#39;#2E6DA4&#39;, start:-1990, end:-1880 },
+  { label:&#39;Egyptian Empire (Middle/New Kingdom)&#39;, color:&#39;#1F5C8C&#39;, start:-1880, end:-1473 },
+  { label:&#39;Canaanite City-States&#39;,  color:&#39;#3A7A5C&#39;, range:&#39;r&#39;, start:-1473, end:-1230 },
+  { label:&#39;Philistine &amp; Regional Powers (Judges Era)&#39;, color:&#39;#C0530A&#39;, start:-1230, end:-1070 },
+];
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+let zoomLevel = 1;
+let activeEras = new Set([1,2,3,4]);
+let currentView = &#39;timeline&#39;;
+let readSet = new Set(JSON.parse(localStorage.getItem(&#39;wcg_tl_read&#39;) || &#39;[]&#39;));
+
+const minYear = -3400, maxYear = -1000;
+function yearToX(year, trackWidth) {
+  return ((year - minYear) / (maxYear - minYear)) * trackWidth;
+}
+
+function renderEraFilter() {
+  const el = document.getElementById(&#39;eraFilter&#39;);
+  el.innerHTML = Object.entries(ERAS).map(([id, e]) => `
+    <div class=&quot;era-chip ${activeEras.has(+id) ? &#39;active&#39; : &#39;&#39;}&quot; data-era=&quot;${id}&quot; onclick=&quot;toggleEra(${id})&quot;>
+      <span class=&quot;dot&quot; style=&quot;background:${e.color}&quot;></span>${e.name}
+    </div>`).join(&#39;&#39;);
+}
+
+function toggleEra(id) {
+  if (activeEras.has(id)) activeEras.delete(id); else activeEras.add(id);
+  if (activeEras.size === 0) activeEras = new Set([1,2,3,4]); // prevent empty
+  renderEraFilter();
+  renderTimeline();
+  renderList();
+}
+
+function renderPowerBand() {
+  const band = document.getElementById(&#39;powerBand&#39;);
+  const total = maxYear - minYear;
+  band.innerHTML = POWER_SEGMENTS.map(seg => {
+    const widthPct = ((seg.end - seg.start) / total) * 100;
+    return `<div class=&quot;power-seg&quot; style=&quot;width:${widthPct}%; background:${seg.color}&quot; title=&quot;${seg.label}&quot;>${seg.label}</div>`;
+  }).join(&#39;&#39;);
+}
+
+function renderTimeline() {
+  const track = document.getElementById(&#39;tlTrack&#39;);
+  const baseWidth = 1520;
+  const trackWidth = baseWidth * zoomLevel;
+  track.style.minWidth = (trackWidth + 80) + &#39;px&#39;;
+
+  let html = &#39;<div class=&quot;tl-axis-line&quot;></div>&#39;;
+
+  // Era band labels
+  Object.entries(ERAS).forEach(([id, e]) => {
+    // find approx midpoint of chars in this era
+    const chars = CHARACTERS.filter(c => c.era == id);
+    if (!chars.length) return;
+    const avgYear = chars.reduce((s,c)=>s+c.year,0) / chars.length;
+    const x = yearToX(avgYear, trackWidth);
+    html += `<div class=&quot;era-band-label&quot; style=&quot;left:${x}px; color:${e.color}&quot;>${e.name}</div>`;
+  });
+
+  CHARACTERS.forEach((c, i) => {
+    const x = yearToX(c.year, trackWidth);
+    const dimmed = !activeEras.has(c.era) ? &#39;dimmed&#39; : &#39;&#39;;
+    const above = i % 2 === 0 ? &#39;&#39; : &#39;above&#39;;
+    const eraColor = ERAS[c.era].color;
+    const isRead = readSet.has(c.id);
+    html += `
+      <div class=&quot;char-node ${dimmed} ${above} ${isRead ? &#39;read&#39; : &#39;&#39;}&quot; style=&quot;left:${x}px&quot; onclick=&quot;openDetail(&#39;${c.id}&#39;)&quot;>
+        <div class=&quot;node-label&quot;>${c.name}</div>
+        <div class=&quot;node-line&quot;></div>
+        <div class=&quot;node-dot&quot; style=&quot;background:${eraColor}&quot;></div>
+      </div>`;
+  });
+
+  track.innerHTML = html;
+}
+
+function renderList() {
+  const wrap = document.getElementById(&#39;listView&#39;);
+  let html = &#39;&#39;;
+  Object.entries(ERAS).forEach(([id, e]) => {
+    if (!activeEras.has(+id)) return;
+    const chars = CHARACTERS.filter(c => c.era == id);
+    html += `<div class=&quot;list-era-group&quot;>
+      <div class=&quot;list-era-title&quot; style=&quot;background:${e.color}&quot;>${e.name} · ${e.range}</div>`;
+    chars.forEach(c => {
+      const isRead = readSet.has(c.id);
+      html += `
+        <div class=&quot;list-item&quot; onclick=&quot;openDetail(&#39;${c.id}&#39;)&quot;>
+          <div class=&quot;li-dot&quot; style=&quot;background:${e.color}&quot;></div>
+          <div class=&quot;li-text&quot;>
+            <div class=&quot;li-name&quot;>${c.name} — ${c.title}</div>
+            <div class=&quot;li-meta&quot;>Chapter ${c.ch} · ~${Math.abs(c.year)} BCE</div>
+          </div>
+          ${isRead ? &#39;<span class=&quot;li-check&quot;>✓</span>&#39; : &#39;&#39;}
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function openDetail(id) {
+  const c = CHARACTERS.find(x => x.id === id);
+  if (!c) return;
+  const e = ERAS[c.era];
+  const isRead = readSet.has(id);
+
+  document.getElementById(&#39;detailInner&#39;).innerHTML = `
+    <button class=&quot;detail-close&quot; onclick=&quot;closeDetail()&quot;>✕</button>
+    <div class=&quot;detail-eyebrow&quot; style=&quot;color:${e.color}&quot;>Chapter ${c.ch} · ${e.name} Era</div>
+    <div class=&quot;detail-title&quot;>${c.title}</div>
+    <div class=&quot;detail-sub&quot;>${c.name}</div>
+    <div class=&quot;detail-grid&quot;>
+      <div class=&quot;detail-cell&quot;><label>Approx. Date</label><span>~${Math.abs(c.year)} BCE</span></div>
+      <div class=&quot;detail-cell&quot;><label>Historical Era</label><span>${e.name}</span></div>
+    </div>
+    <div class=&quot;detail-context&quot;><strong>Context:</strong> ${c.context}</div>
+    <div class=&quot;detail-context&quot; style=&quot;border-left-color:${e.color}&quot;><strong>🌍 Dominant Power:</strong> ${c.power}</div>
+    <div class=&quot;detail-actions&quot;>
+      <button onclick=&quot;goToChapter(&#39;${c.id}&#39;)&quot;>📖 Open Chapter ${c.ch} Worksheet</button>
+      <button class=&quot;secondary&quot; onclick=&quot;openWOL(${c.ch})&quot;>🔗 Read on WOL</button>
+      <label class=&quot;mark-read-toggle&quot;>
+        <input type=&quot;checkbox&quot; ${isRead ? &#39;checked&#39; : &#39;&#39;} onchange=&quot;toggleRead(&#39;${id}&#39;, this)&quot;> Mark explored
+      </label>
+    </div>
+  `;
+  document.getElementById(&#39;detailPanel&#39;).classList.add(&#39;open&#39;);
+  document.getElementById(&#39;detailPanel&#39;).scrollIntoView({ behavior: &#39;smooth&#39;, block: &#39;nearest&#39; });
+}
+
+function closeDetail() {
+  document.getElementById(&#39;detailPanel&#39;).classList.remove(&#39;open&#39;);
+}
+
+function toggleRead(id, checkbox) {
+  if (checkbox.checked) readSet.add(id); else readSet.delete(id);
+  localStorage.setItem(&#39;wcg_tl_read&#39;, JSON.stringify([...readSet]));
+  renderTimeline();
+  renderList();
+  updateProgress();
+}
+
+function goToChapter(id) {
+  // In the full app, this would call showChapter(id) in the parent worksheet
+  if (window.parent &amp;&amp; window.parent !== window) {
+    window.parent.postMessage({ type: &#39;wcg-open-chapter&#39;, chapter: id }, &#39;*&#39;);
+  } else {
+    alert(&#39;This would jump to the &quot;&#39; + id + &#39;&quot; worksheet panel in the main app.&#39;);
+  }
+}
+
+function openWOL(chapterNum) {
+  window.open(&#39;https://wol.jw.org/en/wol/publication/r1/lp-e/wcg&#39;, &#39;_blank&#39;);
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById(&#39;btnTimeline&#39;).classList.toggle(&#39;active&#39;, view === &#39;timeline&#39;);
+  document.getElementById(&#39;btnList&#39;).classList.toggle(&#39;active&#39;, view === &#39;list&#39;);
+  document.getElementById(&#39;tlScroll&#39;).style.display = view === &#39;timeline&#39; ? &#39;block&#39; : &#39;none&#39;;
+  document.getElementById(&#39;powerBandWrap&#39;).style.display = view === &#39;timeline&#39; ? &#39;block&#39; : &#39;none&#39;;
+  document.getElementById(&#39;listView&#39;).classList.toggle(&#39;active&#39;, view === &#39;list&#39;);
+}
+
+function zoom(factor) {
+  zoomLevel = Math.max(0.5, Math.min(3, zoomLevel * factor));
+  renderTimeline();
+}
+function resetZoom() {
+  zoomLevel = 1;
+  renderTimeline();
+}
+
+function updateProgress() {
+  document.getElementById(&#39;psRead&#39;).textContent = readSet.size;
+}
+
+// ── INIT ──
+renderEraFilter();
+renderPowerBand();
+renderTimeline();
+renderList();
+updateProgress();
+</script>
+
+</body>
+</html>
+" style="flex:1; border:none; width:100%; background:white;" sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation"></iframe>
     </div>
   </div>
 </div>
@@ -623,11 +1211,6 @@
   let timelineLoaded = false;
   function openTimeline() {
     const modal = document.getElementById('timelineModal');
-    const frame = document.getElementById('timelineFrame');
-    if (!timelineLoaded) {
-      frame.src = 'WCG_Interactive_Timeline.html';
-      timelineLoaded = true;
-    }
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
   }
@@ -2202,7 +2785,7 @@ _wd.addEventListener('touchmove',e=>{if(e.touches[0].clientY-_tsy>60)closeWolDra
 </style>
 
 <!-- ── FLOATING AUDIO BUTTON ── -->
-<button id="audioFab" title="Audio player — hold to drag" onclick="toggleMiniPlayer()" style="display:none">🎵</button>
+<button id="audioFab" title="Audio player — hold to drag" onclick="toggleMiniPlayer()" style="display:flex">🎵</button>
 <div id="audioMiniPlayer">
   <div class="amp-title" id="ampTitle">NWT Audio</div>
   <div class="amp-sub" id="ampSub">Ready to play</div>
@@ -2352,7 +2935,6 @@ function setPlayerState(state, title = '', sub = '', tts = false) {
   if (state === 'loading') {
     fab.className = 'loading'; fab.textContent = '⏳';
     playBtn.textContent = '⏳';
-    fab.style.display = 'flex';
     document.getElementById('audioMiniPlayer').classList.add('show');
   } else if (state === 'playing') {
     fab.className = 'playing'; fab.textContent = '⏸';
@@ -2363,6 +2945,7 @@ function setPlayerState(state, title = '', sub = '', tts = false) {
     playBtn.textContent = '▶';
   } else { // stopped
     fab.className = ''; fab.textContent = '🎵';
+    fab.style.display = 'flex'; // always keep visible
     playBtn.textContent = '▶';
     document.getElementById('ampProgressFill').style.width = '0%';
     document.getElementById('ampTime').textContent = '0:00';
@@ -2838,7 +3421,7 @@ document.addEventListener('visibilitychange', () => {
 </style>
 
 <!-- ── AI FLOATING BUTTON ── -->
-<button id="aiFab" onclick="openAiPanel()" title="Ask your Bible Study Assistant">
+<button id="aiFab" onclick="openAiPanel()" title="Ask your Bible Study Assistant — hold to drag" style="display:flex">
   🤖
   <span class="ai-badge">AI</span>
 </button>
