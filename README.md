@@ -7,27 +7,29 @@ A Progressive Web App (PWA) for personal Bible study using the *Walk Courageousl
 - 📍 Chronological Bible timeline with world-power bands (3300–1070 BCE)
 - 🔗 WOL deep links — tap any scripture or Watchtower ref to open on WOL
 - 🔊 Scripture audio — NWT audio via JW CDN + Text-to-speech offline fallback
+- 🤖 AI Bible Study Assistant — Claude-powered, context-aware per chapter
 - 💾 Auto-save answers to device storage (localStorage)
 - 📤 Export / 📥 Import answers as JSON backup
 - 📵 Full offline support via Service Worker (cache-first)
 - 📱 Installable on Android & iOS as a home-screen PWA
 
-## Phase 1 Progress
+## Phase 1 — COMPLETE ✅
 - ✅ Interactive timeline
 - ✅ WOL deep links
 - ✅ Scripture audio (NWT + TTS fallback)
-- ⬜ AI study assistant (Claude-powered)
+- ✅ AI Study Assistant (Claude-powered)
 
-## Audio Features
-- **Floating 🎵 button** — always-visible mini player (bottom-right)
-- **Chapter audio bar** — one-tap NWT audio per chapter in the header
-- **Ref audio icons** — 🔊 on every scripture citation, tap to play
-- **WOL drawer audio** — play button alongside each Bible ref card
-- **TTS fallback** — reads key verse aloud when offline or audio unavailable
-- **Progress bar, skip ±10s, seek** — full playback controls
+## AI Assistant Features
+- **🤖 Floating button** — opens full chat panel from anywhere in the app
+- **✨ Proactive insights** — per chapter: Hebrew/Greek words, historical context, character connections
+- **💬 Ask a question** — in every chapter header, context pre-loaded
+- **✍️ Review my answers** — AI reads your worksheet answers and suggests improvements
+- **🤖 Ask AI button** — on every question prompt, pre-fills context automatically
+- **Use as worksheet answer** — one tap to fill AI suggestion into the answer box
+- **Conversation memory** — full chat history maintained per session
 
 ## Deployment
-Hosted on Netlify, connected to this repo. Every push to `main` auto-deploys.
+Hosted on Netlify, connected to this GitHub repo. Every push to `main` auto-deploys in ~30 seconds.
 
 ## Study publication
 [wol.jw.org/en/wol/publication/r1/lp-e/wcg](https://wol.jw.org/en/wol/publication/r1/lp-e/wcg)

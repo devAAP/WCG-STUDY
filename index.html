@@ -2318,6 +2318,648 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 
+<!-- ════════════════════════════════════════════════════════════
+     AI STUDY ASSISTANT ENGINE
+     ════════════════════════════════════════════════════════════ -->
+<style>
+/* ── AI FAB BUTTON ── */
+#aiFab {
+  position: fixed; bottom: 148px; right: 18px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #1A3A5C, #2E6B8C);
+  color: white; border: none; font-size: 22px;
+  cursor: pointer; z-index: 491;
+  box-shadow: 0 4px 18px rgba(26,58,92,0.5);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+#aiFab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(26,58,92,0.6); }
+#aiFab .ai-badge {
+  position: absolute; top: -3px; right: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #B8860B; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  color: white; border: 2px solid white;
+}
+
+/* ── AI CHAT PANEL ── */
+#aiPanel {
+  position: fixed; inset: 0;
+  z-index: 700; display: none;
+  flex-direction: column;
+  background: white;
+}
+#aiPanel.open { display: flex; animation: aiSlideUp 0.3s ease; }
+@keyframes aiSlideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+.ai-panel-header {
+  background: linear-gradient(135deg, #1A3A5C, #2A5A8C);
+  color: white; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+.ai-panel-header .ai-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(184,134,11,0.3);
+  border: 2px solid #B8860B;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.ai-panel-header .ai-info { flex: 1; }
+.ai-panel-header .ai-info strong {
+  display: block; font-size: 14px; color: #E8D5B0;
+  font-family: var(--serif);
+}
+.ai-panel-header .ai-info span { font-size: 11px; color: #9BC0DC; }
+.ai-panel-header .ai-context-badge {
+  background: rgba(184,134,11,0.25); color: #E8C840;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 3px 8px; border-radius: 10px;
+  text-transform: uppercase;
+}
+.ai-close-btn {
+  background: rgba(255,255,255,0.15); border: none;
+  color: white; width: 32px; height: 32px;
+  border-radius: 50%; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── QUICK PROMPTS BAR ── */
+.ai-quick-bar {
+  background: #F7F3EE; border-bottom: 1px solid #E5DDD5;
+  padding: 8px 12px; display: flex; gap: 6px;
+  overflow-x: auto; flex-shrink: 0;
+}
+.ai-quick-bar::-webkit-scrollbar { display: none; }
+.ai-chip {
+  flex-shrink: 0; padding: 5px 12px;
+  background: white; border: 1px solid #D5C9BC;
+  border-radius: 16px; font-size: 12px;
+  color: #8B3A0F; cursor: pointer;
+  font-family: var(--sans); white-space: nowrap;
+  transition: all 0.15s;
+}
+.ai-chip:hover { background: #8B3A0F; color: white; border-color: #8B3A0F; }
+
+/* ── CHAT MESSAGES ── */
+.ai-messages {
+  flex: 1; overflow-y: auto;
+  padding: 16px; display: flex; flex-direction: column; gap: 14px;
+  background: #F9F6F2;
+}
+
+.ai-msg { display: flex; gap: 10px; align-items: flex-start; }
+.ai-msg.user { flex-direction: row-reverse; }
+
+.ai-msg-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; margin-top: 2px;
+}
+.ai-msg.assistant .ai-msg-avatar { background: #1A3A5C; }
+.ai-msg.user .ai-msg-avatar { background: #8B3A0F; }
+
+.ai-msg-bubble {
+  max-width: 82%; padding: 10px 14px;
+  border-radius: 14px; font-size: 14px;
+  line-height: 1.6; font-family: var(--sans);
+}
+.ai-msg.assistant .ai-msg-bubble {
+  background: white; color: #1A1A1A;
+  border-radius: 4px 14px 14px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.ai-msg.user .ai-msg-bubble {
+  background: #1A3A5C; color: white;
+  border-radius: 14px 4px 14px 14px;
+}
+.ai-msg-bubble p { margin-bottom: 8px; }
+.ai-msg-bubble p:last-child { margin-bottom: 0; }
+.ai-msg-bubble strong { color: #B8860B; }
+.ai-msg.user .ai-msg-bubble strong { color: #E8D5B0; }
+.ai-msg-bubble em { font-style: italic; color: #555; }
+.ai-msg.user .ai-msg-bubble em { color: #C0D8F0; }
+
+/* ── TYPING INDICATOR ── */
+.ai-typing {
+  display: flex; gap: 5px; padding: 12px 16px;
+  align-items: center;
+}
+.ai-typing span {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #B8860B; animation: typingBounce 1.2s infinite;
+}
+.ai-typing span:nth-child(2) { animation-delay: 0.2s; }
+.ai-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+/* ── SUGGEST ANSWER BUTTON (inside bubble) ── */
+.ai-suggest-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 8px; padding: 6px 12px;
+  background: #F0F7FF; color: #1A5CB5;
+  border: 1px solid #C0D8F0; border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--sans); transition: all 0.15s;
+}
+.ai-suggest-btn:hover { background: #1A3A5C; color: white; border-color: #1A3A5C; }
+
+/* ── INPUT BAR ── */
+.ai-input-bar {
+  background: white; border-top: 1px solid #EEE;
+  padding: 10px 12px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0;
+}
+.ai-input {
+  flex: 1; border: 1.5px solid #DDD; border-radius: 20px;
+  padding: 9px 14px; font-size: 14px; font-family: var(--sans);
+  outline: none; resize: none; max-height: 100px;
+  line-height: 1.4; transition: border-color 0.2s;
+}
+.ai-input:focus { border-color: #1A3A5C; }
+.ai-send-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #1A3A5C; color: white; border: none;
+  font-size: 16px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.ai-send-btn:hover { background: #2A5A8C; transform: scale(1.05); }
+.ai-send-btn:disabled { background: #CCC; transform: none; cursor: default; }
+
+/* ── PER-CHAPTER ASK AI BUTTON ── */
+.ch-ai-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 40px;
+  background: linear-gradient(90deg, #F0F5FF, #F7F3EE);
+  border-bottom: 1px solid #D5DFF5;
+  flex-wrap: wrap;
+}
+.ch-ai-bar .cab-label { font-size: 11px; font-weight: 700; color: #1A3A5C; letter-spacing: 0.5px; text-transform: uppercase; }
+.ch-ai-insight-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  background: linear-gradient(135deg, #1A3A5C, #2E6B8C);
+  color: white; border: none; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: var(--sans); transition: all 0.15s;
+  white-space: nowrap;
+}
+.ch-ai-insight-btn:hover { opacity: 0.88; transform: scale(1.02); }
+.ch-ai-ask-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  background: white; color: #8B3A0F;
+  border: 1.5px solid #8B3A0F;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: var(--sans); transition: all 0.15s;
+  white-space: nowrap;
+}
+.ch-ai-ask-btn:hover { background: #8B3A0F; color: white; }
+@media (max-width: 640px) { .ch-ai-bar { padding: 8px 16px; } }
+
+/* ── QUESTION-LEVEL AI BUTTON ── */
+.q-ai-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: #1A5CB5; background: none; border: none;
+  cursor: pointer; font-family: var(--sans); padding: 2px 6px;
+  border-radius: 4px; transition: background 0.15s; vertical-align: middle;
+  margin-left: 6px;
+}
+.q-ai-btn:hover { background: #E8F0FE; }
+</style>
+
+<!-- ── AI FLOATING BUTTON ── -->
+<button id="aiFab" onclick="openAiPanel()" title="Ask your Bible Study Assistant">
+  🤖
+  <span class="ai-badge">AI</span>
+</button>
+
+<!-- ── AI CHAT PANEL ── -->
+<div id="aiPanel">
+  <div class="ai-panel-header">
+    <div class="ai-avatar">🤖</div>
+    <div class="ai-info">
+      <strong>Bible Study Assistant</strong>
+      <span>Powered by Claude · Walk Courageously With God</span>
+    </div>
+    <span class="ai-context-badge" id="aiContextBadge">Introduction</span>
+    <button class="ai-close-btn" onclick="closeAiPanel()">✕</button>
+  </div>
+
+  <div class="ai-quick-bar" id="aiQuickBar">
+    <button class="ai-chip" onclick="sendQuickPrompt('What is the historical context of this chapter?')">🗺 Historical context</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('What Hebrew or Greek words are significant in this account?')">📜 Key words</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('How does this character connect to others in the Bible?')">🔗 Character connections</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('What does this account reveal about Jehovah\'s personality?')">🙏 Jehovah\'s qualities</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('Give me a modern-day parallel for the courage shown in this chapter.')">🪞 Modern parallel</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('Review my answers and suggest improvements.')">✍️ Review my answers</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('What world power dominated during this period and how did it affect this account?')">🏛 World powers</button>
+    <button class="ai-chip" onclick="sendQuickPrompt('What is the Dig Deeper insight for this chapter?')">🔍 Dig Deeper insight</button>
+  </div>
+
+  <div class="ai-messages" id="aiMessages"></div>
+
+  <div class="ai-input-bar">
+    <textarea class="ai-input" id="aiInput" rows="1"
+      placeholder="Ask anything about this chapter, character, or Bible account…"
+      onkeydown="aiInputKeydown(event)"
+      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()">➤</button>
+  </div>
+</div>
+
+<!-- ── AI ENGINE JS ── -->
+<script>
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let aiConversation = []; // full message history for context
+let aiCurrentChapter = 'intro';
+let aiIsStreaming = false;
+
+const CHAPTER_AI_CONTEXT = {
+  intro: { title:'Introduction', character:'—', section:'—', bibleRef:'John 16:33; Matt. 26:46; Heb. 13:5' },
+  ch1:  { title:'He Walked With God', character:'Enoch', section:'1', bibleRef:'Gen. 5:18–24; Jude 14–15; Heb. 11:5', period:'~3400–3000 BCE, 7th generation from Adam', empire:'Pre-Flood — Cainite civilization' },
+  ch2:  { title:'He Condemned the World', character:'Noah', section:'1', bibleRef:'Gen. 6–9; Heb. 11:7; 2 Pet. 2:5', period:'~2400 BCE, 10th generation from Adam', empire:'Pre-Flood — Nephilim dominated' },
+  ch3:  { title:'She Refused to Look Back', character:'Sarah', section:'1', bibleRef:'Gen. 12; 17–18; Heb. 11:11', period:'~2000 BCE', empire:'Early Bronze Age — Ur of the Chaldeans, Egyptian Middle Kingdom' },
+  ch4:  { title:'The First Man to Wage a Righteous War', character:'Abraham', section:'1', bibleRef:'Gen. 14–15', period:'~1943 BCE', empire:'Mesopotamian city-states — Elam dominated Canaan' },
+  ch5:  { title:'He Faced His Hardest Challenge', character:'Abraham', section:'1', bibleRef:'Gen. 22; Jas. 2:21–23', period:'~1920 BCE', empire:'Egyptian Middle Kingdom; Canaanite city-states' },
+  ch6:  { title:'She Ventured Into the Unknown', character:'Rebekah', section:'1', bibleRef:'Gen. 24', period:'~1880 BCE', empire:'Egyptian Middle Kingdom' },
+  ch7:  { title:'He Faced Danger to Protect His Family', character:'Jacob', section:'1', bibleRef:'Gen. 32–33', period:'~1760 BCE', empire:'Hyksos presence growing in Egypt; Canaanite culture' },
+  ch8:  { title:'He Resisted Temptation', character:'Joseph', section:'1', bibleRef:'Gen. 39–41', period:'~1750–1711 BCE', empire:'Egypt — Hyksos era' },
+  ch9:  { title:'They Refused to Fear Man', character:'Shiphrah, Puah, Amram, Jochebed & Miriam', section:'1', bibleRef:'Ex. 1:8–2:10', period:'~1600–1514 BCE', empire:'Egypt — New Kingdom; Thutmose dynasty' },
+  ch10: { title:'He Made His Choice', character:'Moses', section:'1', bibleRef:'Heb. 11:24–27; Acts 7:22–29', period:'~1557–1514 BCE', empire:'Egypt — New Kingdom under Thutmose / Amenhotep line' },
+  ch11: { title:'"Go In to Pharaoh"', character:'Moses', section:'1', bibleRef:'Ex. 4–12', period:'~1513 BCE', empire:'Egypt — arguably the most powerful empire on earth' },
+  ch12: { title:'He Fought Loyally for His God', character:'Caleb', section:'1', bibleRef:'Num. 13–14; Josh. 14', period:'~1473–1427 BCE', empire:'Egypt weakening; Canaanite confederacy — fortified city-states' },
+  ch13: { title:'He Followed Unusual Instructions', character:'Joshua', section:'1', bibleRef:'Josh. 1; 6', period:'~1473 BCE', empire:'Post-exodus Canaan — Canaanite city-states; no dominant superpower' },
+  ch14: { title:'She Chose Jehovah Over Her Own People', character:'Rahab', section:'1', bibleRef:'Josh. 2; 6', period:'~1473 BCE', empire:'Jericho — strategic fortified city on the Jordan plain' },
+  ch15: { title:'They Faced Tragedy Together', character:'Naomi & Ruth', section:'1', bibleRef:'Ruth 1–4', period:'~1100 BCE — Period of the Judges', empire:'Moab; early Israel without a king; Philistine pressure' },
+  ch16: { title:'"I Will Certainly Go With You"', character:'Barak & Deborah', section:'1', bibleRef:'Judg. 4–5', period:'~1150 BCE', empire:'Canaanite King Jabin — iron chariots; 900 strong' },
+  ch17: { title:'"Most Blessed of Women"', character:'Jael', section:'1', bibleRef:'Judg. 4:17–22; 5:24–27', period:'~1150 BCE', empire:'Canaanite — Sisera\'s military force' },
+  ch18: { title:'Courageous and Cautious', character:'Gideon', section:'1', bibleRef:'Judg. 6–8', period:'~1100 BCE', empire:'Midianite confederation — vast raiding armies' },
+  ch19: { title:'They Fulfilled a Difficult Vow', character:'Jephthah & His Daughter', section:'1', bibleRef:'Judg. 11–12', period:'~1100 BCE', empire:'Ammonite oppression of Israel' },
+  ch20: { title:'He Found Courage in a Time of Weakness', character:'Samson', section:'1', bibleRef:'Judg. 13–16', period:'~1100 BCE', empire:'Philistine pentapolis — iron-age military superpower' },
+  ch21: { title:'A Boy Who Spoke Up for Jehovah', character:'Samuel', section:'1', bibleRef:'1 Sam. 1–3', period:'~1100 BCE', empire:'Philistine dominance; Israel in spiritual decline' },
+};
+
+// ─────────────────────────────────────────────────────────────
+// SYSTEM PROMPT — context-aware per chapter
+// ─────────────────────────────────────────────────────────────
+function buildSystemPrompt(chapterId) {
+  const ctx = CHAPTER_AI_CONTEXT[chapterId] || CHAPTER_AI_CONTEXT.intro;
+
+  // Gather user's existing answers for this chapter
+  const answers = [];
+  const prefix = `wcg_study_${chapterId}-`;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(prefix)) {
+      const val = localStorage.getItem(k);
+      if (val && val.trim()) {
+        const field = k.replace(prefix, '').replace(/-/g, ' ');
+        answers.push(`[${field}]: ${val.trim().slice(0, 300)}`);
+      }
+    }
+  }
+  const answersText = answers.length
+    ? `\n\nThe student has already written these answers for this chapter:\n${answers.join('\n')}`
+    : '\n\nThe student has not yet written any answers for this chapter.';
+
+  return `You are a seasoned Bible study assistant specializing in the Jehovah's Witnesses publication "Walk Courageously With God" (WCG). You have deep knowledge of Bible history, archaeology, Hebrew and Greek scripture, and Watchtower Society publications.
+
+CURRENT STUDY SESSION:
+- Publication: Walk Courageously With God (wol.jw.org/en/wol/publication/r1/lp-e/wcg)
+- Chapter: ${ctx.title}
+- Character/Subject: ${ctx.character}
+- Section: ${ctx.section}
+- Key Bible references: ${ctx.bibleRef}
+${ctx.period ? `- Historical period: ${ctx.period}` : ''}
+${ctx.empire ? `- Dominant world power: ${ctx.empire}` : ''}
+${answersText}
+
+YOUR ROLE:
+1. Answer Bible research questions with depth — cite specific scriptures, Hebrew/Greek words, historical context
+2. Suggest worksheet answers when asked — frame them as suggestions the student can adapt, never replace their own reflection
+3. When reviewing answers, be encouraging but specific about how to deepen the research
+4. Always tie insights back to Jehovah's qualities and the student's personal application
+5. Use the 5 research filters: Geography, Parallel Timelines, Character Threads, Mirror Principle, Family Worship Engine
+6. Keep responses concise for mobile reading — use short paragraphs, bold key terms
+7. Cite WOL article codes (w01 9/15, etc.) when referencing Watchtower publications
+8. Never speculate beyond what scripture and WOL publications support
+
+Respond in a warm, scholarly tone — like a knowledgeable elder or pioneer sister who loves deep Bible research.`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// CLAUDE API CALL
+// ─────────────────────────────────────────────────────────────
+async function callClaude(userMessage) {
+  const systemPrompt = buildSystemPrompt(aiCurrentChapter);
+  aiConversation.push({ role: 'user', content: userMessage });
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: aiConversation
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const assistantText = data.content?.find(b => b.type === 'text')?.text || 'No response received.';
+  aiConversation.push({ role: 'assistant', content: assistantText });
+  return assistantText;
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER MARKDOWN-LITE (bold, italic, newlines)
+// ─────────────────────────────────────────────────────────────
+function renderMarkdown(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>')
+    .replace(/^(.+)$/,'<p>$1</p>');
+}
+
+// ─────────────────────────────────────────────────────────────
+// MESSAGE RENDERING
+// ─────────────────────────────────────────────────────────────
+function appendMessage(role, text, targetKey) {
+  const msgs = document.getElementById('aiMessages');
+
+  // Remove typing indicator if present
+  const typing = msgs.querySelector('.ai-typing-wrap');
+  if (typing) typing.remove();
+
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  div.innerHTML = `
+    <div class="ai-msg-avatar">${role === 'assistant' ? '🤖' : '👤'}</div>
+    <div class="ai-msg-bubble">
+      ${renderMarkdown(text)}
+      ${role === 'assistant' && targetKey ? `
+        <button class="ai-suggest-btn" onclick="fillAnswer('${targetKey}', \`${text.replace(/`/g,'\\`')}\`)">
+          ✍️ Use as worksheet answer
+        </button>` : ''}
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-msg assistant ai-typing-wrap';
+  wrap.innerHTML = `
+    <div class="ai-msg-avatar">🤖</div>
+    <div class="ai-msg-bubble" style="padding:10px 16px">
+      <div class="ai-typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>`;
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ─────────────────────────────────────────────────────────────
+// FILL ANSWER INTO WORKSHEET
+// ─────────────────────────────────────────────────────────────
+function fillAnswer(key, suggestion) {
+  // Find the textarea with this data-key
+  const ta = document.querySelector(`textarea[data-key="${key}"]`);
+  if (!ta) {
+    // Panel is open — close it first, then try again
+    closeAiPanel();
+    setTimeout(() => {
+      const ta2 = document.querySelector(`textarea[data-key="${key}"]`);
+      if (ta2) { ta2.value = suggestion; ta2.focus(); autoSave(ta2); }
+    }, 300);
+    return;
+  }
+  ta.value = suggestion;
+  ta.focus();
+  autoSave(ta);
+  // Flash to show it was filled
+  ta.style.background = '#FFF8DC';
+  setTimeout(() => ta.style.background = '', 1500);
+  closeAiPanel();
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEND MESSAGE
+// ─────────────────────────────────────────────────────────────
+async function sendAiMessage(overrideText, targetKey) {
+  if (aiIsStreaming) return;
+  const input = document.getElementById('aiInput');
+  const text = overrideText || input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('aiSendBtn').disabled = true;
+  aiIsStreaming = true;
+
+  appendMessage('user', text);
+  showTyping();
+
+  try {
+    const reply = await callClaude(text);
+    appendMessage('assistant', reply, targetKey || null);
+  } catch (err) {
+    const msgs = document.getElementById('aiMessages');
+    const typing = msgs.querySelector('.ai-typing-wrap');
+    if (typing) typing.remove();
+    appendMessage('assistant', `❌ **Error:** ${err.message}\n\nPlease check your connection and try again.`);
+  } finally {
+    document.getElementById('aiSendBtn').disabled = false;
+    aiIsStreaming = false;
+  }
+}
+
+function sendQuickPrompt(prompt) {
+  openAiPanel();
+  setTimeout(() => sendAiMessage(prompt), 100);
+}
+
+function aiInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAiMessage();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// OPEN / CLOSE PANEL
+// ─────────────────────────────────────────────────────────────
+function openAiPanel(chapterId) {
+  if (chapterId) aiCurrentChapter = chapterId;
+  const ctx = CHAPTER_AI_CONTEXT[aiCurrentChapter] || CHAPTER_AI_CONTEXT.intro;
+  document.getElementById('aiContextBadge').textContent =
+    ctx.character !== '—' ? `Ch: ${ctx.character}` : 'Introduction';
+
+  // Update quick bar chips with chapter-specific ones
+  updateQuickBar();
+
+  document.getElementById('aiPanel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Show welcome message if first open
+  const msgs = document.getElementById('aiMessages');
+  if (msgs.children.length === 0) {
+    const ctx2 = CHAPTER_AI_CONTEXT[aiCurrentChapter] || CHAPTER_AI_CONTEXT.intro;
+    const welcome = `Welcome! I'm your Bible study assistant for **Walk Courageously With God**.\n\nI'm currently loaded with context for **${ctx2.title}**${ctx2.character !== '—' ? ` — the account of **${ctx2.character}**` : ''}.\n\nI can help you with:\n- Deep research into the Bible account\n- Hebrew and Greek word studies\n- Historical and geographical context\n- Reviewing and enriching your worksheet answers\n- Proactive insights you may have missed\n\nWhat would you like to explore?`;
+    appendMessage('assistant', welcome);
+  }
+  setTimeout(() => document.getElementById('aiInput').focus(), 300);
+}
+
+function closeAiPanel() {
+  document.getElementById('aiPanel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHAPTER-SPECIFIC QUICK BAR
+// ─────────────────────────────────────────────────────────────
+function updateQuickBar() {
+  const ctx = CHAPTER_AI_CONTEXT[aiCurrentChapter];
+  if (!ctx || ctx.character === '—') return;
+  const bar = document.getElementById('aiQuickBar');
+  // Prepend a chapter-specific chip
+  const existing = bar.querySelector('.chapter-chip');
+  if (existing) existing.remove();
+  const chip = document.createElement('button');
+  chip.className = 'ai-chip chapter-chip';
+  chip.style.background = '#1A3A5C';
+  chip.style.color = 'white';
+  chip.style.borderColor = '#1A3A5C';
+  chip.textContent = `📖 About ${ctx.character}`;
+  chip.onclick = () => sendAiMessage(`Tell me the most important things to know about ${ctx.character} for deep Bible study of this chapter.`);
+  bar.insertBefore(chip, bar.firstChild);
+}
+
+// ─────────────────────────────────────────────────────────────
+// BUILD AI BAR IN CHAPTER HEADERS
+// ─────────────────────────────────────────────────────────────
+function buildChapterAiBar(panelId) {
+  const panel = document.getElementById('panel-' + panelId);
+  if (!panel || panel.querySelector('.ch-ai-bar')) return;
+  const ctx = CHAPTER_AI_CONTEXT[panelId];
+  if (!ctx) return;
+  // Insert after the audio bar (or WOL toolbar, or title bar)
+  const audioBar = panel.querySelector('.ch-audio-bar');
+  const wolBar   = panel.querySelector('.wol-ref-toolbar');
+  const titleBar = panel.querySelector('.ch-title-bar');
+  const anchor   = audioBar || wolBar || titleBar;
+  if (!anchor) return;
+
+  const bar = document.createElement('div');
+  bar.className = 'ch-ai-bar';
+  bar.innerHTML = `
+    <span class="cab-label">🤖 AI:</span>
+    <button class="ch-ai-insight-btn" onclick="getChapterInsights('${panelId}')">
+      ✨ Proactive insights
+    </button>
+    <button class="ch-ai-ask-btn" onclick="openAiPanel('${panelId}')">
+      💬 Ask a question
+    </button>
+    <button class="ch-ai-ask-btn" onclick="reviewMyAnswers('${panelId}')">
+      ✍️ Review my answers
+    </button>`;
+  anchor.after(bar);
+}
+
+// ─────────────────────────────────────────────────────────────
+// PROACTIVE INSIGHTS — auto-generated on demand
+// ─────────────────────────────────────────────────────────────
+async function getChapterInsights(panelId) {
+  openAiPanel(panelId);
+  const ctx = CHAPTER_AI_CONTEXT[panelId];
+  if (!ctx) return;
+  const prompt = `Give me 3 proactive research insights about ${ctx.character !== '—' ? ctx.character : 'this chapter'} that most Bible students overlook. Focus on: (1) a significant Hebrew or Greek word, (2) a historical or geographical detail that reframes the courage shown, and (3) a connection to another Bible character or prophecy. Keep each insight to 2–3 sentences.`;
+  setTimeout(() => sendAiMessage(prompt), 200);
+}
+
+async function reviewMyAnswers(panelId) {
+  openAiPanel(panelId);
+  const prompt = `Please review the worksheet answers I have written for this chapter. For each answer that exists, tell me: what I got right, what I could deepen, and one specific scripture or research angle I may have missed. Be encouraging but honest.`;
+  setTimeout(() => sendAiMessage(prompt), 200);
+}
+
+// ─────────────────────────────────────────────────────────────
+// INJECT AI BUTTON ON EVERY QUESTION PROMPT
+// ─────────────────────────────────────────────────────────────
+function injectAiOnQuestions() {
+  document.querySelectorAll('.q-label:not([data-ai-linked])').forEach(el => {
+    el.setAttribute('data-ai-linked', '1');
+    // Find the associated textarea's data-key
+    const nextTA = el.parentElement?.querySelector('textarea[data-key]');
+    if (!nextTA) return;
+    const key = nextTA.dataset.key;
+    const questionText = el.textContent.trim().slice(0, 200);
+
+    const btn = document.createElement('button');
+    btn.className = 'q-ai-btn';
+    btn.title = 'Get AI help with this question';
+    btn.innerHTML = '🤖 Ask AI';
+    btn.onclick = e => {
+      e.stopPropagation();
+      openAiPanel(aiCurrentChapter);
+      const prompt = `Help me answer this worksheet question: "${questionText}"\n\nPlease give me a research-based response I can use as a starting point, then suggest how I might personalise it for my own reflection.`;
+      setTimeout(() => sendAiMessage(prompt, key), 200);
+    };
+    el.appendChild(btn);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT & HOOKS
+// ─────────────────────────────────────────────────────────────
+function initAI() {
+  injectAiOnQuestions();
+  const chapterIds = ['intro','ch1','ch2','ch3','ch4','ch5','ch6','ch7','ch8','ch9','ch10',
+    'ch11','ch12','ch13','ch14','ch15','ch16','ch17','ch18','ch19','ch20','ch21'];
+  chapterIds.forEach(buildChapterAiBar);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initAI, 1000);
+  setTimeout(() => { injectAiOnQuestions(); initAI(); }, 2000);
+});
+
+// Hook showChapter to update AI context
+const _origSCAI = window.showChapter;
+window.showChapter = function(id, btn) {
+  _origSCAI(id, btn);
+  aiCurrentChapter = id;
+  // Reset conversation context badge
+  const ctx = CHAPTER_AI_CONTEXT[id] || CHAPTER_AI_CONTEXT.intro;
+  const badge = document.getElementById('aiContextBadge');
+  if (badge) badge.textContent = ctx.character !== '—' ? `Ch: ${ctx.character}` : 'Introduction';
+  setTimeout(() => { buildChapterAiBar(id); injectAiOnQuestions(); }, 200);
+};
+
+// Close AI panel on back gesture (Android)
+window.addEventListener('popstate', () => {
+  if (document.getElementById('aiPanel').classList.contains('open')) {
+    closeAiPanel();
+  }
+});
+</script>
+
 <!-- ── OFFLINE / ONLINE TOASTS ── -->
 <div id="offlineToast">📵 You're offline — your answers are still saved locally</div>
 <div id="onlineToast">✅ Back online</div>
