@@ -44,6 +44,7 @@
 
   /* ── RESET & BASE ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; max-width: 100vw; }
 
   :root {
     --jw-brown:    #8B3A0F;
@@ -129,10 +130,12 @@
   /* ── MAIN LAYOUT ── */
   .page-wrapper {
     max-width: 900px;
+    width: 100%;
     margin: 0 auto;
     background: var(--jw-bg);
     min-height: 100vh;
     box-shadow: 0 0 40px rgba(0,0,0,0.15);
+    overflow-x: hidden;
   }
 
   /* ── PUBLICATION HEADER ── */
@@ -616,16 +619,29 @@
         <span style="color:#E8D5B0; font-size:13px; font-weight:700; font-family:var(--serif);">📍 Bible Timeline</span>
         <button onclick="closeTimeline()" style="background:rgba(255,255,255,0.15); border:none; color:white; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
       </div>
-      <iframe id="timelineFrame" srcdoc="<!DOCTYPE html>
-<html lang=&quot;en&quot;>
+      <iframe id="timelineFrame" src="about:blank" style="flex:1; border:none; width:100%; background:white;" sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation"></iframe>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes tlSlideUp { from { transform: translateY(40px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+</style>
+
+<script>
+  // ── TIMELINE MODAL CONTROL ──
+  let timelineLoaded = false;
+  // Timeline HTML embedded as JS string — loaded via blob URL (no network request, no CSS leak)
+  const TIMELINE_HTML = `<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset=&quot;UTF-8&quot;>
-<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, viewport-fit=cover&quot;>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Interactive Timeline — Walk Courageously With God</title>
 <style>
-  @import url(&#39;https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Source+Sans+3:wght@300;400;600;700&amp;display=swap&#39;);
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; max-width: 100vw; }
 
   :root {
     --jw-brown:    #8B3A0F;
@@ -642,8 +658,8 @@
     --jw-sidebar:  #F5F0EB;
     --jw-sidebar-border: #D4C5B0;
     --jw-badge-bg: #F0E8DC;
-    --serif:       &#39;Noto Serif&#39;, Georgia, serif;
-    --sans:        &#39;Source Sans 3&#39;, &#39;Helvetica Neue&#39;, sans-serif;
+    --serif:       'Noto Serif', Georgia, serif;
+    --sans:        'Source Sans 3', 'Helvetica Neue', sans-serif;
 
     /* Era colors */
     --era1: #6B5B95;  /* Pre-Flood — deep violet */
@@ -704,10 +720,10 @@
   }
   .era-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
   .era-chip.active { border-color: currentColor; }
-  .era-chip[data-era=&quot;1&quot;].active { color: var(--era1); background: #6B5B9518; }
-  .era-chip[data-era=&quot;2&quot;].active { color: var(--era2); background: #2E6DA418; }
-  .era-chip[data-era=&quot;3&quot;].active { color: var(--era3); background: #3A7A5C18; }
-  .era-chip[data-era=&quot;4&quot;].active { color: var(--era4); background: #C0530A18; }
+  .era-chip[data-era="1"].active { color: var(--era1); background: #6B5B9518; }
+  .era-chip[data-era="2"].active { color: var(--era2); background: #2E6DA418; }
+  .era-chip[data-era="3"].active { color: var(--era3); background: #3A7A5C18; }
+  .era-chip[data-era="4"].active { color: var(--era4); background: #C0530A18; }
 
   /* ── WORLD POWER BAND ── */
   .power-band-wrap {
@@ -774,7 +790,7 @@
   .char-node:hover .node-label { background: var(--jw-badge-bg); }
   .char-node.dimmed { opacity: 0.15; pointer-events: none; }
   .char-node.read .node-dot { box-shadow: 0 0 0 3px #3A7A5C40, 0 2px 6px rgba(0,0,0,0.25); }
-  .char-node.read .node-label::after { content: &#39; ✓&#39;; color: #3A7A5C; }
+  .char-node.read .node-label::after { content: ' ✓'; color: #3A7A5C; }
 
   /* ── ERA LABELS ON TRACK ── */
   .era-band-label {
@@ -885,46 +901,46 @@
 </head>
 <body>
 
-<div class=&quot;tl-header&quot;>
-  <div class=&quot;eyebrow&quot;>Section 1 · Patriarchs to Judges</div>
+<div class="tl-header">
+  <div class="eyebrow">Section 1 · Patriarchs to Judges</div>
   <h1>📍 Interactive Bible Timeline</h1>
-  <div class=&quot;sub&quot;>Walk Courageously With God — Chapters 1–21</div>
+  <div class="sub">Walk Courageously With God — Chapters 1–21</div>
 </div>
 
-<div class=&quot;controls&quot;>
-  <button class=&quot;view-btn active&quot; id=&quot;btnTimeline&quot; onclick=&quot;setView(&#39;timeline&#39;)&quot;>📊 Timeline</button>
-  <button class=&quot;view-btn&quot; id=&quot;btnList&quot; onclick=&quot;setView(&#39;list&#39;)&quot;>📋 List</button>
-  <div class=&quot;era-filter&quot; id=&quot;eraFilter&quot;></div>
-  <div class=&quot;zoom-btns&quot;>
-    <button onclick=&quot;zoom(0.8)&quot;>−</button>
-    <button onclick=&quot;zoom(1.25)&quot;>+</button>
-    <button onclick=&quot;resetZoom()&quot;>Reset</button>
+<div class="controls">
+  <button class="view-btn active" id="btnTimeline" onclick="setView('timeline')">📊 Timeline</button>
+  <button class="view-btn" id="btnList" onclick="setView('list')">📋 List</button>
+  <div class="era-filter" id="eraFilter"></div>
+  <div class="zoom-btns">
+    <button onclick="zoom(0.8)">−</button>
+    <button onclick="zoom(1.25)">+</button>
+    <button onclick="resetZoom()">Reset</button>
   </div>
 </div>
 
-<div class=&quot;power-band-wrap&quot; id=&quot;powerBandWrap&quot;>
-  <div class=&quot;power-band-label&quot;>World Powers &amp;amp; Dominant Cultures</div>
-  <div class=&quot;power-band&quot; id=&quot;powerBand&quot;></div>
+<div class="power-band-wrap" id="powerBandWrap">
+  <div class="power-band-label">World Powers &amp; Dominant Cultures</div>
+  <div class="power-band" id="powerBand"></div>
 </div>
 
-<div class=&quot;tl-scroll&quot; id=&quot;tlScroll&quot;>
-  <div class=&quot;tl-track&quot; id=&quot;tlTrack&quot;>
-    <div class=&quot;tl-axis-line&quot;></div>
+<div class="tl-scroll" id="tlScroll">
+  <div class="tl-track" id="tlTrack">
+    <div class="tl-axis-line"></div>
   </div>
 </div>
 
-<div class=&quot;legend-hint&quot;>Tap any character to see historical context · Era colors match chapter sections</div>
+<div class="legend-hint">Tap any character to see historical context · Era colors match chapter sections</div>
 
-<div class=&quot;detail-panel&quot; id=&quot;detailPanel&quot;>
-  <div class=&quot;detail-inner&quot; id=&quot;detailInner&quot;></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-inner" id="detailInner"></div>
 </div>
 
-<div class=&quot;list-view&quot; id=&quot;listView&quot;></div>
+<div class="list-view" id="listView"></div>
 
-<div class=&quot;progress-summary&quot;>
-  <div class=&quot;ps-item&quot;><strong id=&quot;psRead&quot;>0</strong> of 21 characters explored</div>
-  <div class=&quot;ps-item&quot;><strong id=&quot;psEra&quot;>4</strong> historical eras covered</div>
-  <div class=&quot;ps-item&quot;><strong>~2,400 years</strong> spanned (Enoch → Samuel)</div>
+<div class="progress-summary">
+  <div class="ps-item"><strong id="psRead">0</strong> of 21 characters explored</div>
+  <div class="ps-item"><strong id="psEra">4</strong> historical eras covered</div>
+  <div class="ps-item"><strong>~2,400 years</strong> spanned (Enoch → Samuel)</div>
 </div>
 
 <script>
@@ -933,85 +949,85 @@
 // Years are approximate, before common era (BCE), per Bible chronology
 // ═══════════════════════════════════════════════════════════
 const CHARACTERS = [
-  { id:&#39;ch1&#39;,  name:&#39;Enoch&#39;,                 ch:1,  year:-3300, era:1, title:&#39;He Walked With God&#39;,
-    context:&#39;7th generation from Adam. Lived alongside Adam for 308 years. First prophet — warned of coming judgment in a violent, godless world.&#39;,
-    power:&#39;No organized empire — Cainite civilization dominated culturally&#39; },
-  { id:&#39;ch2&#39;,  name:&#39;Noah&#39;,                  ch:2,  year:-2500, era:1, title:&#39;He Condemned the World&#39;,
-    context:&#39;10th generation from Adam. Built the ark over decades amid mockery and Nephilim violence. His faithfulness condemned his entire generation.&#39;,
-    power:&#39;Nephilim (&quot;Fellers&quot;) dominated; pre-Babel, no nations yet&#39; },
-  { id:&#39;ch3&#39;,  name:&#39;Sarah&#39;,                 ch:3,  year:-2000, era:2, title:&#39;She Refused to Look Back&#39;,
-    context:&#39;Wife of Abraham. Left the prosperous city of Ur for a nomadic life in Canaan, trusting Jehovah\&#39;s promise of a homeland.&#39;,
-    power:&#39;Ur of the Chaldeans (Sumerian city-state) — highly advanced urban culture&#39; },
-  { id:&#39;ch4&#39;,  name:&#39;Abraham&#39;,               ch:4,  year:-1990, era:2, title:&#39;The First Man to Wage a Righteous War&#39;,
-    context:&#39;Rescued his nephew Lot from four kings with a small household militia — demonstrating both courage and reliance on Jehovah.&#39;,
-    power:&#39;Mesopotamian city-state alliances (Elam, Shinar, Ellasar, Goiim)&#39; },
-  { id:&#39;ch5&#39;,  name:&#39;Abraham&#39;,               ch:5,  year:-1980, era:2, title:&#39;He Faced His Hardest Challenge&#39;,
-    context:&#39;Commanded to offer Isaac on Mount Moriah — the ultimate test of faith, foreshadowing God\&#39;s own sacrifice of his Son.&#39;,
-    power:&#39;Canaanite city-states; Egypt as regional power to the south&#39; },
-  { id:&#39;ch6&#39;,  name:&#39;Rebekah&#39;,               ch:6,  year:-1960, era:2, title:&#39;She Ventured Into the Unknown&#39;,
-    context:&#39;Left her family in Paddan-aram to marry Isaac, a man she had never met, trusting Jehovah\&#39;s guidance through Abraham\&#39;s servant.&#39;,
-    power:&#39;Aramean tribal region (Paddan-aram / Haran)&#39; },
-  { id:&#39;ch7&#39;,  name:&#39;Jacob&#39;,                 ch:7,  year:-1900, era:2, title:&#39;He Faced Danger to Protect His Family&#39;,
-    context:&#39;Wrestled with an angel and faced reconciliation with Esau, whom he had wronged 20 years earlier — courage to confront the past.&#39;,
-    power:&#39;Canaan under regional tribal chieftains&#39; },
-  { id:&#39;ch8&#39;,  name:&#39;Joseph&#39;,                ch:8,  year:-1880, era:2, title:&#39;He Resisted Temptation&#39;,
-    context:&#39;Sold into slavery by his brothers, resisted Potiphar\&#39;s wife, and rose to become Egypt\&#39;s second-in-command under Pharaoh.&#39;,
-    power:&#39;Egypt — Middle Kingdom, a major ancient superpower&#39; },
-  { id:&#39;ch9&#39;,  name:&#39;Shiphrah, Puah &amp; Family&#39;, ch:9, year:-1530, era:3, title:&#39;They Refused to Fear Man&#39;,
-    context:&#39;Hebrew midwives defied Pharaoh\&#39;s genocide order; Moses\&#39; parents hid him; his sister Miriam bravely watched over him at the river.&#39;,
-    power:&#39;Egypt — New Kingdom, peak imperial power, enslaving the Israelites&#39; },
-  { id:&#39;ch10&#39;, name:&#39;Moses&#39;,                 ch:10, year:-1530, era:3, title:&#39;He Made His Choice&#39;,
-    context:&#39;Raised in Pharaoh\&#39;s household, Moses chose to identify with his enslaved people rather than enjoy Egyptian privilege.&#39;,
-    power:&#39;Egypt — New Kingdom (likely 18th Dynasty)&#39; },
-  { id:&#39;ch11&#39;, name:&#39;Moses&#39;,                 ch:11, year:-1513, era:3, title:&#39;&quot;Go In to Pharaoh&quot;&#39;,
-    context:&#39;Confronted Pharaoh repeatedly, demanding Israel\&#39;s release, through ten devastating plagues that broke Egyptian power.&#39;,
-    power:&#39;Egypt — New Kingdom, at the height of its military might&#39; },
-  { id:&#39;ch12&#39;, name:&#39;Caleb&#39;,                 ch:12, year:-1512, era:3, title:&#39;He Fought Loyally for His God&#39;,
-    context:&#39;One of only two faithful spies among twelve sent into Canaan; waited 40 extra years to finally claim his inheritance at age 85.&#39;,
-    power:&#39;Canaanite city-states with fortified, &quot;giant&quot;-inhabited cities&#39; },
-  { id:&#39;ch13&#39;, name:&#39;Joshua&#39;,                ch:13, year:-1473, era:3, title:&#39;He Followed Unusual Instructions&#39;,
-    context:&#39;Led Israel across the Jordan and conquered Jericho by marching around its walls for seven days — pure obedience over military logic.&#39;,
-    power:&#39;Canaanite city-state confederation; Jericho a major fortified city&#39; },
-  { id:&#39;ch14&#39;, name:&#39;Rahab&#39;,                 ch:14, year:-1473, era:3, title:&#39;She Chose Jehovah Over Her Own People&#39;,
-    context:&#39;A Canaanite woman in Jericho who hid Israelite spies, risking execution, because she recognized Jehovah as the true God.&#39;,
-    power:&#39;Jericho — fortified Canaanite city-state, soon to fall&#39; },
-  { id:&#39;ch15&#39;, name:&#39;Naomi &amp; Ruth&#39;,          ch:15, year:-1150, era:4, title:&#39;They Faced Tragedy Together&#39;,
-    context:&#39;Naomi lost her husband and sons in Moab; her Moabite daughter-in-law Ruth chose loyalty to Naomi and to Jehovah over her homeland.&#39;,
-    power:&#39;Period of the Judges — Israel decentralized; Moab a regional kingdom&#39; },
-  { id:&#39;ch16&#39;, name:&#39;Barak &amp; Deborah&#39;,       ch:16, year:-1230, era:4, title:&#39;&quot;I Will Certainly Go With You&quot;&#39;,
-    context:&#39;Deborah, a prophetess and judge, rallied Barak to battle against Canaanite General Sisera\&#39;s 900 iron chariots.&#39;,
-    power:&#39;Canaanite city-state of Hazor under King Jabin, dominant in the north&#39; },
-  { id:&#39;ch17&#39;, name:&#39;Jael&#39;,                  ch:17, year:-1230, era:4, title:&#39;&quot;Most Blessed of Women&quot;&#39;,
-    context:&#39;A Kenite woman who killed the fleeing General Sisera in her tent, fulfilling Deborah\&#39;s prophecy that a woman would get the credit.&#39;,
-    power:&#39;Same era as Barak/Deborah — Canaanite military collapse&#39; },
-  { id:&#39;ch18&#39;, name:&#39;Gideon&#39;,                ch:18, year:-1180, era:4, title:&#39;Courageous and Cautious&#39;,
-    context:&#39;Reduced his army from 32,000 to just 300 men at Jehovah\&#39;s direction, then routed the vast Midianite camel-raiding hordes.&#39;,
-    power:&#39;Midianite and Amalekite nomadic confederations raiding Israel&#39; },
-  { id:&#39;ch19&#39;, name:&#39;Jephthah &amp; Daughter&#39;,   ch:19, year:-1100, era:4, title:&#39;They Fulfilled a Difficult Vow&#39;,
-    context:&#39;Jephthah, a former outcast, led Israel against the Ammonites; his daughter willingly honored his vow of dedicated service.&#39;,
-    power:&#39;Ammonite kingdom east of the Jordan, pressing into Israelite territory&#39; },
-  { id:&#39;ch20&#39;, name:&#39;Samson&#39;,                ch:20, year:-1075, era:4, title:&#39;He Found Courage in a Time of Weakness&#39;,
-    context:&#39;Despite his failures and Delilah\&#39;s betrayal, Samson\&#39;s final prayer for renewed strength brought down the Philistine temple.&#39;,
-    power:&#39;Philistine city-state confederation (Pentapolis) — Israel\&#39;s chief oppressor&#39; },
-  { id:&#39;ch21&#39;, name:&#39;Samuel&#39;,                ch:21, year:-1070, era:4, title:&#39;A Boy Who Spoke Up for Jehovah&#39;,
-    context:&#39;As a young boy serving at the tabernacle under corrupt priest Eli, Samuel courageously delivered Jehovah\&#39;s judgment message.&#39;,
-    power:&#39;Philistines dominant militarily; Israel\&#39;s priesthood corrupted under Eli\&#39;s sons&#39; },
+  { id:'ch1',  name:'Enoch',                 ch:1,  year:-3300, era:1, title:'He Walked With God',
+    context:'7th generation from Adam. Lived alongside Adam for 308 years. First prophet — warned of coming judgment in a violent, godless world.',
+    power:'No organized empire — Cainite civilization dominated culturally' },
+  { id:'ch2',  name:'Noah',                  ch:2,  year:-2500, era:1, title:'He Condemned the World',
+    context:'10th generation from Adam. Built the ark over decades amid mockery and Nephilim violence. His faithfulness condemned his entire generation.',
+    power:'Nephilim ("Fellers") dominated; pre-Babel, no nations yet' },
+  { id:'ch3',  name:'Sarah',                 ch:3,  year:-2000, era:2, title:'She Refused to Look Back',
+    context:'Wife of Abraham. Left the prosperous city of Ur for a nomadic life in Canaan, trusting Jehovah\\'s promise of a homeland.',
+    power:'Ur of the Chaldeans (Sumerian city-state) — highly advanced urban culture' },
+  { id:'ch4',  name:'Abraham',               ch:4,  year:-1990, era:2, title:'The First Man to Wage a Righteous War',
+    context:'Rescued his nephew Lot from four kings with a small household militia — demonstrating both courage and reliance on Jehovah.',
+    power:'Mesopotamian city-state alliances (Elam, Shinar, Ellasar, Goiim)' },
+  { id:'ch5',  name:'Abraham',               ch:5,  year:-1980, era:2, title:'He Faced His Hardest Challenge',
+    context:'Commanded to offer Isaac on Mount Moriah — the ultimate test of faith, foreshadowing God\\'s own sacrifice of his Son.',
+    power:'Canaanite city-states; Egypt as regional power to the south' },
+  { id:'ch6',  name:'Rebekah',               ch:6,  year:-1960, era:2, title:'She Ventured Into the Unknown',
+    context:'Left her family in Paddan-aram to marry Isaac, a man she had never met, trusting Jehovah\\'s guidance through Abraham\\'s servant.',
+    power:'Aramean tribal region (Paddan-aram / Haran)' },
+  { id:'ch7',  name:'Jacob',                 ch:7,  year:-1900, era:2, title:'He Faced Danger to Protect His Family',
+    context:'Wrestled with an angel and faced reconciliation with Esau, whom he had wronged 20 years earlier — courage to confront the past.',
+    power:'Canaan under regional tribal chieftains' },
+  { id:'ch8',  name:'Joseph',                ch:8,  year:-1880, era:2, title:'He Resisted Temptation',
+    context:'Sold into slavery by his brothers, resisted Potiphar\\'s wife, and rose to become Egypt\\'s second-in-command under Pharaoh.',
+    power:'Egypt — Middle Kingdom, a major ancient superpower' },
+  { id:'ch9',  name:'Shiphrah, Puah & Family', ch:9, year:-1530, era:3, title:'They Refused to Fear Man',
+    context:'Hebrew midwives defied Pharaoh\\'s genocide order; Moses\\' parents hid him; his sister Miriam bravely watched over him at the river.',
+    power:'Egypt — New Kingdom, peak imperial power, enslaving the Israelites' },
+  { id:'ch10', name:'Moses',                 ch:10, year:-1530, era:3, title:'He Made His Choice',
+    context:'Raised in Pharaoh\\'s household, Moses chose to identify with his enslaved people rather than enjoy Egyptian privilege.',
+    power:'Egypt — New Kingdom (likely 18th Dynasty)' },
+  { id:'ch11', name:'Moses',                 ch:11, year:-1513, era:3, title:'"Go In to Pharaoh"',
+    context:'Confronted Pharaoh repeatedly, demanding Israel\\'s release, through ten devastating plagues that broke Egyptian power.',
+    power:'Egypt — New Kingdom, at the height of its military might' },
+  { id:'ch12', name:'Caleb',                 ch:12, year:-1512, era:3, title:'He Fought Loyally for His God',
+    context:'One of only two faithful spies among twelve sent into Canaan; waited 40 extra years to finally claim his inheritance at age 85.',
+    power:'Canaanite city-states with fortified, "giant"-inhabited cities' },
+  { id:'ch13', name:'Joshua',                ch:13, year:-1473, era:3, title:'He Followed Unusual Instructions',
+    context:'Led Israel across the Jordan and conquered Jericho by marching around its walls for seven days — pure obedience over military logic.',
+    power:'Canaanite city-state confederation; Jericho a major fortified city' },
+  { id:'ch14', name:'Rahab',                 ch:14, year:-1473, era:3, title:'She Chose Jehovah Over Her Own People',
+    context:'A Canaanite woman in Jericho who hid Israelite spies, risking execution, because she recognized Jehovah as the true God.',
+    power:'Jericho — fortified Canaanite city-state, soon to fall' },
+  { id:'ch15', name:'Naomi & Ruth',          ch:15, year:-1150, era:4, title:'They Faced Tragedy Together',
+    context:'Naomi lost her husband and sons in Moab; her Moabite daughter-in-law Ruth chose loyalty to Naomi and to Jehovah over her homeland.',
+    power:'Period of the Judges — Israel decentralized; Moab a regional kingdom' },
+  { id:'ch16', name:'Barak & Deborah',       ch:16, year:-1230, era:4, title:'"I Will Certainly Go With You"',
+    context:'Deborah, a prophetess and judge, rallied Barak to battle against Canaanite General Sisera\\'s 900 iron chariots.',
+    power:'Canaanite city-state of Hazor under King Jabin, dominant in the north' },
+  { id:'ch17', name:'Jael',                  ch:17, year:-1230, era:4, title:'"Most Blessed of Women"',
+    context:'A Kenite woman who killed the fleeing General Sisera in her tent, fulfilling Deborah\\'s prophecy that a woman would get the credit.',
+    power:'Same era as Barak/Deborah — Canaanite military collapse' },
+  { id:'ch18', name:'Gideon',                ch:18, year:-1180, era:4, title:'Courageous and Cautious',
+    context:'Reduced his army from 32,000 to just 300 men at Jehovah\\'s direction, then routed the vast Midianite camel-raiding hordes.',
+    power:'Midianite and Amalekite nomadic confederations raiding Israel' },
+  { id:'ch19', name:'Jephthah & Daughter',   ch:19, year:-1100, era:4, title:'They Fulfilled a Difficult Vow',
+    context:'Jephthah, a former outcast, led Israel against the Ammonites; his daughter willingly honored his vow of dedicated service.',
+    power:'Ammonite kingdom east of the Jordan, pressing into Israelite territory' },
+  { id:'ch20', name:'Samson',                ch:20, year:-1075, era:4, title:'He Found Courage in a Time of Weakness',
+    context:'Despite his failures and Delilah\\'s betrayal, Samson\\'s final prayer for renewed strength brought down the Philistine temple.',
+    power:'Philistine city-state confederation (Pentapolis) — Israel\\'s chief oppressor' },
+  { id:'ch21', name:'Samuel',                ch:21, year:-1070, era:4, title:'A Boy Who Spoke Up for Jehovah',
+    context:'As a young boy serving at the tabernacle under corrupt priest Eli, Samuel courageously delivered Jehovah\\'s judgment message.',
+    power:'Philistines dominant militarily; Israel\\'s priesthood corrupted under Eli\\'s sons' },
 ];
 
 const ERAS = {
-  1: { name:&#39;Pre-Flood&#39;,          color:&#39;#6B5B95&#39;, range:&#39;~3300–2400 BCE&#39; },
-  2: { name:&#39;Patriarchs&#39;,         color:&#39;#2E6DA4&#39;, range:&#39;~2000–1880 BCE&#39; },
-  3: { name:&#39;Exodus &amp; Conquest&#39;,  color:&#39;#3A7A5C&#39;, range:&#39;~1530–1470 BCE&#39; },
-  4: { name:&#39;Judges&#39;,             color:&#39;#C0530A&#39;, range:&#39;~1230–1070 BCE&#39; },
+  1: { name:'Pre-Flood',          color:'#6B5B95', range:'~3300–2400 BCE' },
+  2: { name:'Patriarchs',         color:'#2E6DA4', range:'~2000–1880 BCE' },
+  3: { name:'Exodus & Conquest',  color:'#3A7A5C', range:'~1530–1470 BCE' },
+  4: { name:'Judges',             color:'#C0530A', range:'~1230–1070 BCE' },
 };
 
 const POWER_SEGMENTS = [
-  { label:&#39;Pre-Flood World&#39;,        color:&#39;#6B5B95&#39;, start:-3300, end:-2400 },
-  { label:&#39;Mesopotamian City-States&#39;, color:&#39;#7A6FA0&#39;, start:-2400, end:-1990 },
-  { label:&#39;Canaanite Tribal Lands&#39;, color:&#39;#2E6DA4&#39;, start:-1990, end:-1880 },
-  { label:&#39;Egyptian Empire (Middle/New Kingdom)&#39;, color:&#39;#1F5C8C&#39;, start:-1880, end:-1473 },
-  { label:&#39;Canaanite City-States&#39;,  color:&#39;#3A7A5C&#39;, range:&#39;r&#39;, start:-1473, end:-1230 },
-  { label:&#39;Philistine &amp; Regional Powers (Judges Era)&#39;, color:&#39;#C0530A&#39;, start:-1230, end:-1070 },
+  { label:'Pre-Flood World',        color:'#6B5B95', start:-3300, end:-2400 },
+  { label:'Mesopotamian City-States', color:'#7A6FA0', start:-2400, end:-1990 },
+  { label:'Canaanite Tribal Lands', color:'#2E6DA4', start:-1990, end:-1880 },
+  { label:'Egyptian Empire (Middle/New Kingdom)', color:'#1F5C8C', start:-1880, end:-1473 },
+  { label:'Canaanite City-States',  color:'#3A7A5C', range:'r', start:-1473, end:-1230 },
+  { label:'Philistine & Regional Powers (Judges Era)', color:'#C0530A', start:-1230, end:-1070 },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -1019,8 +1035,8 @@ const POWER_SEGMENTS = [
 // ═══════════════════════════════════════════════════════════
 let zoomLevel = 1;
 let activeEras = new Set([1,2,3,4]);
-let currentView = &#39;timeline&#39;;
-let readSet = new Set(JSON.parse(localStorage.getItem(&#39;wcg_tl_read&#39;) || &#39;[]&#39;));
+let currentView = 'timeline';
+let readSet = new Set(JSON.parse(localStorage.getItem('wcg_tl_read') || '[]'));
 
 const minYear = -3400, maxYear = -1000;
 function yearToX(year, trackWidth) {
@@ -1028,11 +1044,11 @@ function yearToX(year, trackWidth) {
 }
 
 function renderEraFilter() {
-  const el = document.getElementById(&#39;eraFilter&#39;);
-  el.innerHTML = Object.entries(ERAS).map(([id, e]) => `
-    <div class=&quot;era-chip ${activeEras.has(+id) ? &#39;active&#39; : &#39;&#39;}&quot; data-era=&quot;${id}&quot; onclick=&quot;toggleEra(${id})&quot;>
-      <span class=&quot;dot&quot; style=&quot;background:${e.color}&quot;></span>${e.name}
-    </div>`).join(&#39;&#39;);
+  const el = document.getElementById('eraFilter');
+  el.innerHTML = Object.entries(ERAS).map(([id, e]) => \`
+    <div class="era-chip \${activeEras.has(+id) ? 'active' : ''}" data-era="\${id}" onclick="toggleEra(\${id})">
+      <span class="dot" style="background:\${e.color}"></span>\${e.name}
+    </div>\`).join('');
 }
 
 function toggleEra(id) {
@@ -1044,21 +1060,21 @@ function toggleEra(id) {
 }
 
 function renderPowerBand() {
-  const band = document.getElementById(&#39;powerBand&#39;);
+  const band = document.getElementById('powerBand');
   const total = maxYear - minYear;
   band.innerHTML = POWER_SEGMENTS.map(seg => {
     const widthPct = ((seg.end - seg.start) / total) * 100;
-    return `<div class=&quot;power-seg&quot; style=&quot;width:${widthPct}%; background:${seg.color}&quot; title=&quot;${seg.label}&quot;>${seg.label}</div>`;
-  }).join(&#39;&#39;);
+    return \`<div class="power-seg" style="width:\${widthPct}%; background:\${seg.color}" title="\${seg.label}">\${seg.label}</div>\`;
+  }).join('');
 }
 
 function renderTimeline() {
-  const track = document.getElementById(&#39;tlTrack&#39;);
+  const track = document.getElementById('tlTrack');
   const baseWidth = 1520;
   const trackWidth = baseWidth * zoomLevel;
-  track.style.minWidth = (trackWidth + 80) + &#39;px&#39;;
+  track.style.minWidth = (trackWidth + 80) + 'px';
 
-  let html = &#39;<div class=&quot;tl-axis-line&quot;></div>&#39;;
+  let html = '<div class="tl-axis-line"></div>';
 
   // Era band labels
   Object.entries(ERAS).forEach(([id, e]) => {
@@ -1067,47 +1083,47 @@ function renderTimeline() {
     if (!chars.length) return;
     const avgYear = chars.reduce((s,c)=>s+c.year,0) / chars.length;
     const x = yearToX(avgYear, trackWidth);
-    html += `<div class=&quot;era-band-label&quot; style=&quot;left:${x}px; color:${e.color}&quot;>${e.name}</div>`;
+    html += \`<div class="era-band-label" style="left:\${x}px; color:\${e.color}">\${e.name}</div>\`;
   });
 
   CHARACTERS.forEach((c, i) => {
     const x = yearToX(c.year, trackWidth);
-    const dimmed = !activeEras.has(c.era) ? &#39;dimmed&#39; : &#39;&#39;;
-    const above = i % 2 === 0 ? &#39;&#39; : &#39;above&#39;;
+    const dimmed = !activeEras.has(c.era) ? 'dimmed' : '';
+    const above = i % 2 === 0 ? '' : 'above';
     const eraColor = ERAS[c.era].color;
     const isRead = readSet.has(c.id);
-    html += `
-      <div class=&quot;char-node ${dimmed} ${above} ${isRead ? &#39;read&#39; : &#39;&#39;}&quot; style=&quot;left:${x}px&quot; onclick=&quot;openDetail(&#39;${c.id}&#39;)&quot;>
-        <div class=&quot;node-label&quot;>${c.name}</div>
-        <div class=&quot;node-line&quot;></div>
-        <div class=&quot;node-dot&quot; style=&quot;background:${eraColor}&quot;></div>
-      </div>`;
+    html += \`
+      <div class="char-node \${dimmed} \${above} \${isRead ? 'read' : ''}" style="left:\${x}px" onclick="openDetail('\${c.id}')">
+        <div class="node-label">\${c.name}</div>
+        <div class="node-line"></div>
+        <div class="node-dot" style="background:\${eraColor}"></div>
+      </div>\`;
   });
 
   track.innerHTML = html;
 }
 
 function renderList() {
-  const wrap = document.getElementById(&#39;listView&#39;);
-  let html = &#39;&#39;;
+  const wrap = document.getElementById('listView');
+  let html = '';
   Object.entries(ERAS).forEach(([id, e]) => {
     if (!activeEras.has(+id)) return;
     const chars = CHARACTERS.filter(c => c.era == id);
-    html += `<div class=&quot;list-era-group&quot;>
-      <div class=&quot;list-era-title&quot; style=&quot;background:${e.color}&quot;>${e.name} · ${e.range}</div>`;
+    html += \`<div class="list-era-group">
+      <div class="list-era-title" style="background:\${e.color}">\${e.name} · \${e.range}</div>\`;
     chars.forEach(c => {
       const isRead = readSet.has(c.id);
-      html += `
-        <div class=&quot;list-item&quot; onclick=&quot;openDetail(&#39;${c.id}&#39;)&quot;>
-          <div class=&quot;li-dot&quot; style=&quot;background:${e.color}&quot;></div>
-          <div class=&quot;li-text&quot;>
-            <div class=&quot;li-name&quot;>${c.name} — ${c.title}</div>
-            <div class=&quot;li-meta&quot;>Chapter ${c.ch} · ~${Math.abs(c.year)} BCE</div>
+      html += \`
+        <div class="list-item" onclick="openDetail('\${c.id}')">
+          <div class="li-dot" style="background:\${e.color}"></div>
+          <div class="li-text">
+            <div class="li-name">\${c.name} — \${c.title}</div>
+            <div class="li-meta">Chapter \${c.ch} · ~\${Math.abs(c.year)} BCE</div>
           </div>
-          ${isRead ? &#39;<span class=&quot;li-check&quot;>✓</span>&#39; : &#39;&#39;}
-        </div>`;
+          \${isRead ? '<span class="li-check">✓</span>' : ''}
+        </div>\`;
     });
-    html += `</div>`;
+    html += \`</div>\`;
   });
   wrap.innerHTML = html;
 }
@@ -1118,36 +1134,36 @@ function openDetail(id) {
   const e = ERAS[c.era];
   const isRead = readSet.has(id);
 
-  document.getElementById(&#39;detailInner&#39;).innerHTML = `
-    <button class=&quot;detail-close&quot; onclick=&quot;closeDetail()&quot;>✕</button>
-    <div class=&quot;detail-eyebrow&quot; style=&quot;color:${e.color}&quot;>Chapter ${c.ch} · ${e.name} Era</div>
-    <div class=&quot;detail-title&quot;>${c.title}</div>
-    <div class=&quot;detail-sub&quot;>${c.name}</div>
-    <div class=&quot;detail-grid&quot;>
-      <div class=&quot;detail-cell&quot;><label>Approx. Date</label><span>~${Math.abs(c.year)} BCE</span></div>
-      <div class=&quot;detail-cell&quot;><label>Historical Era</label><span>${e.name}</span></div>
+  document.getElementById('detailInner').innerHTML = \`
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <div class="detail-eyebrow" style="color:\${e.color}">Chapter \${c.ch} · \${e.name} Era</div>
+    <div class="detail-title">\${c.title}</div>
+    <div class="detail-sub">\${c.name}</div>
+    <div class="detail-grid">
+      <div class="detail-cell"><label>Approx. Date</label><span>~\${Math.abs(c.year)} BCE</span></div>
+      <div class="detail-cell"><label>Historical Era</label><span>\${e.name}</span></div>
     </div>
-    <div class=&quot;detail-context&quot;><strong>Context:</strong> ${c.context}</div>
-    <div class=&quot;detail-context&quot; style=&quot;border-left-color:${e.color}&quot;><strong>🌍 Dominant Power:</strong> ${c.power}</div>
-    <div class=&quot;detail-actions&quot;>
-      <button onclick=&quot;goToChapter(&#39;${c.id}&#39;)&quot;>📖 Open Chapter ${c.ch} Worksheet</button>
-      <button class=&quot;secondary&quot; onclick=&quot;openWOL(${c.ch})&quot;>🔗 Read on WOL</button>
-      <label class=&quot;mark-read-toggle&quot;>
-        <input type=&quot;checkbox&quot; ${isRead ? &#39;checked&#39; : &#39;&#39;} onchange=&quot;toggleRead(&#39;${id}&#39;, this)&quot;> Mark explored
+    <div class="detail-context"><strong>Context:</strong> \${c.context}</div>
+    <div class="detail-context" style="border-left-color:\${e.color}"><strong>🌍 Dominant Power:</strong> \${c.power}</div>
+    <div class="detail-actions">
+      <button onclick="goToChapter('\${c.id}')">📖 Open Chapter \${c.ch} Worksheet</button>
+      <button class="secondary" onclick="openWOL(\${c.ch})">🔗 Read on WOL</button>
+      <label class="mark-read-toggle">
+        <input type="checkbox" \${isRead ? 'checked' : ''} onchange="toggleRead('\${id}', this)"> Mark explored
       </label>
     </div>
-  `;
-  document.getElementById(&#39;detailPanel&#39;).classList.add(&#39;open&#39;);
-  document.getElementById(&#39;detailPanel&#39;).scrollIntoView({ behavior: &#39;smooth&#39;, block: &#39;nearest&#39; });
+  \`;
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('detailPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function closeDetail() {
-  document.getElementById(&#39;detailPanel&#39;).classList.remove(&#39;open&#39;);
+  document.getElementById('detailPanel').classList.remove('open');
 }
 
 function toggleRead(id, checkbox) {
   if (checkbox.checked) readSet.add(id); else readSet.delete(id);
-  localStorage.setItem(&#39;wcg_tl_read&#39;, JSON.stringify([...readSet]));
+  localStorage.setItem('wcg_tl_read', JSON.stringify([...readSet]));
   renderTimeline();
   renderList();
   updateProgress();
@@ -1155,24 +1171,24 @@ function toggleRead(id, checkbox) {
 
 function goToChapter(id) {
   // In the full app, this would call showChapter(id) in the parent worksheet
-  if (window.parent &amp;&amp; window.parent !== window) {
-    window.parent.postMessage({ type: &#39;wcg-open-chapter&#39;, chapter: id }, &#39;*&#39;);
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'wcg-open-chapter', chapter: id }, '*');
   } else {
-    alert(&#39;This would jump to the &quot;&#39; + id + &#39;&quot; worksheet panel in the main app.&#39;);
+    alert('This would jump to the "' + id + '" worksheet panel in the main app.');
   }
 }
 
 function openWOL(chapterNum) {
-  window.open(&#39;https://wol.jw.org/en/wol/publication/r1/lp-e/wcg&#39;, &#39;_blank&#39;);
+  window.open('https://wol.jw.org/en/wol/publication/r1/lp-e/wcg', '_blank');
 }
 
 function setView(view) {
   currentView = view;
-  document.getElementById(&#39;btnTimeline&#39;).classList.toggle(&#39;active&#39;, view === &#39;timeline&#39;);
-  document.getElementById(&#39;btnList&#39;).classList.toggle(&#39;active&#39;, view === &#39;list&#39;);
-  document.getElementById(&#39;tlScroll&#39;).style.display = view === &#39;timeline&#39; ? &#39;block&#39; : &#39;none&#39;;
-  document.getElementById(&#39;powerBandWrap&#39;).style.display = view === &#39;timeline&#39; ? &#39;block&#39; : &#39;none&#39;;
-  document.getElementById(&#39;listView&#39;).classList.toggle(&#39;active&#39;, view === &#39;list&#39;);
+  document.getElementById('btnTimeline').classList.toggle('active', view === 'timeline');
+  document.getElementById('btnList').classList.toggle('active', view === 'list');
+  document.getElementById('tlScroll').style.display = view === 'timeline' ? 'block' : 'none';
+  document.getElementById('powerBandWrap').style.display = view === 'timeline' ? 'block' : 'none';
+  document.getElementById('listView').classList.toggle('active', view === 'list');
 }
 
 function zoom(factor) {
@@ -1185,7 +1201,7 @@ function resetZoom() {
 }
 
 function updateProgress() {
-  document.getElementById(&#39;psRead&#39;).textContent = readSet.size;
+  document.getElementById('psRead').textContent = readSet.size;
 }
 
 // ── INIT ──
@@ -1198,19 +1214,19 @@ updateProgress();
 
 </body>
 </html>
-" style="flex:1; border:none; width:100%; background:white;" sandbox="allow-scripts allow-same-origin allow-popups allow-top-navigation"></iframe>
-    </div>
-  </div>
-</div>
-<style>
-  @keyframes tlSlideUp { from { transform: translateY(40px); opacity:0; } to { transform: translateY(0); opacity:1; } }
-</style>
+`;
 
-<script>
-  // ── TIMELINE MODAL CONTROL ──
   let timelineLoaded = false;
   function openTimeline() {
     const modal = document.getElementById('timelineModal');
+    const frame = document.getElementById('timelineFrame');
+    if (!timelineLoaded) {
+      // Create blob URL from embedded HTML — completely isolated, no CSS leak
+      const blob = new Blob([TIMELINE_HTML], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      frame.src = blobUrl;
+      timelineLoaded = true;
+    }
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
   }
@@ -2785,7 +2801,7 @@ _wd.addEventListener('touchmove',e=>{if(e.touches[0].clientY-_tsy>60)closeWolDra
 </style>
 
 <!-- ── FLOATING AUDIO BUTTON ── -->
-<button id="audioFab" title="Audio player — hold to drag" onclick="toggleMiniPlayer()" style="display:flex">🎵</button>
+<button id="audioFab" title="Audio player — hold to drag" onclick="toggleMiniPlayer()" style="display:flex;position:fixed;bottom:88px;right:18px;z-index:490">🎵</button>
 <div id="audioMiniPlayer">
   <div class="amp-title" id="ampTitle">NWT Audio</div>
   <div class="amp-sub" id="ampSub">Ready to play</div>
@@ -3421,7 +3437,7 @@ document.addEventListener('visibilitychange', () => {
 </style>
 
 <!-- ── AI FLOATING BUTTON ── -->
-<button id="aiFab" onclick="openAiPanel()" title="Ask your Bible Study Assistant — hold to drag" style="display:flex">
+<button id="aiFab" onclick="openAiPanel()" title="Ask your Bible Study Assistant — hold to drag" style="display:flex;position:fixed;bottom:152px;right:18px;z-index:491">
   🤖
   <span class="ai-badge">AI</span>
 </button>
