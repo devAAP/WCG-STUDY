@@ -2093,14 +2093,11 @@ window.addEventListener('beforeunload', saveAll);
      DRAGGABLE FAB ENGINE — touch & mouse, both buttons
      ════════════════════════════════════════════════════════════ -->
 <style>
-/* Drag-enabled FABs — touch support */
+/* Drag-enabled FABs — touch support (shared rules only) */
 #audioFab, #aiFab {
   touch-action: none;
   user-select: none;
-  cursor: grab;
 }
-#audioFab:active, #aiFab:active { cursor: grabbing; }
-/* Once JS has set top/left, hide bottom/right via JS directly */
 
 /* Drag hint tooltip */
 .fab-drag-hint {
@@ -2135,8 +2132,8 @@ window.addEventListener('beforeunload', saveAll);
 
   // Default positions [top, left] in px — stored per FAB
   const DEFAULTS = {
-    audioFab: { top: null, left: null },  // null = use bottom/right defaults
-    aiFab:    { top: null, left: null },
+    audioFab: { side: 'right', bottom: 88  },   // right side
+    aiFab:    { side: 'left',  bottom: 88  },   // left side — separated from audio
   };
 
   // ── LOAD SAVED POSITIONS ───────────────────────────────────
@@ -2185,17 +2182,17 @@ window.addEventListener('beforeunload', saveAll);
     if (!mp) return;
     const vw = window.innerWidth;
     const mpW = Math.min(280, vw - 32);
-    // Place mini-player above the FAB
-    let mpTop  = audioFabTop - 160;
-    let mpLeft = audioFabLeft + FAB_SIZE - mpW;
-    // Keep in viewport
-    if (mpTop < 70) mpTop = audioFabTop + FAB_SIZE + 8;
-    if (mpLeft < 8) mpLeft = 8;
-    if (mpLeft + mpW > vw - 8) mpLeft = vw - mpW - 8;
-    mp.style.top    = mpTop + 'px';
-    mp.style.left   = mpLeft + 'px';
-    mp.style.bottom = 'auto';
-    mp.style.right  = 'auto';
+    // Place mini-player above the FAB, aligned to same horizontal side
+    let mpTop  = audioFabTop - 170;
+    let mpLeft = audioFabLeft + FAB_SIZE - mpW; // right-align to FAB
+    // Keep in viewport bounds
+    if (mpTop < 70)           mpTop  = audioFabTop + FAB_SIZE + 8;
+    if (mpLeft < 8)           mpLeft = 8;
+    if (mpLeft + mpW > vw-8)  mpLeft = vw - mpW - 8;
+    mp.style.top      = mpTop  + 'px';
+    mp.style.left     = mpLeft + 'px';
+    mp.style.bottom   = 'auto';
+    mp.style.right    = 'auto';
     mp.style.maxWidth = mpW + 'px';
   }
 
@@ -2228,26 +2225,28 @@ window.addEventListener('beforeunload', saveAll);
       const saved = loadPos(el.id);
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      if (saved && saved.top && saved.left) {
-        // Re-clamp saved position in case screen size changed
+      if (saved && saved.top != null && saved.left != null) {
+        // Restore saved position, re-clamped for current screen size
         const clamped = snapToEdge(el, saved.top, saved.left);
         currentTop  = clamped.top;
         currentLeft = clamped.left;
       } else {
-        // Default positions — keep near bottom-right but fully in viewport
+        // Default positions — audio RIGHT, AI LEFT, same vertical level
         if (el.id === 'audioFab') {
           currentTop  = vh - 100 - FAB_SIZE;
-          currentLeft = vw - FAB_SIZE - 18;
+          currentLeft = vw - FAB_SIZE - 18;   // right side
         } else {
-          currentTop  = vh - 162 - FAB_SIZE;
-          currentLeft = vw - FAB_SIZE - 18;
+          // aiFab: bottom-left, same height as audio
+          currentTop  = vh - 100 - FAB_SIZE;
+          currentLeft = 18;                    // left side
         }
       }
-      // Apply top/left and clear bottom/right so they don't conflict
+      // Set top/left; clear bottom/right to avoid conflict with CSS defaults
       el.style.top    = currentTop + 'px';
       el.style.left   = currentLeft + 'px';
       el.style.bottom = 'auto';
       el.style.right  = 'auto';
+      el.style.display = 'flex';   // always visible
       if (el.id === 'audioFab') repositionMiniPlayer(currentTop, currentLeft);
     }
 
@@ -3225,27 +3224,28 @@ document.addEventListener('visibilitychange', () => {
      AI STUDY ASSISTANT ENGINE
      ════════════════════════════════════════════════════════════ -->
 <style>
-/* ── AI FAB BUTTON ── */
+/* ── AI FAB BUTTON — rebuilt clean ── */
 #aiFab {
   position: fixed;
-  /* Safe default — JS will override with saved/calculated position */
-  bottom: 152px; right: 18px;
-  top: auto; left: auto;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: linear-gradient(135deg, #1A3A5C, #2E6B8C);
+  bottom: 88px;
+  left: 18px;           /* LEFT side — away from audio FAB on right */
+  top: auto; right: auto;
+  width: 56px; height: 56px; border-radius: 16px;
+  background: linear-gradient(145deg, #1A3A5C 0%, #2A6090 100%);
   color: white; border: none; font-size: 22px;
-  cursor: pointer; z-index: 491;
-  box-shadow: 0 4px 18px rgba(26,58,92,0.5);
-  display: flex; align-items: center; justify-content: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: grab; z-index: 491;
+  box-shadow: 0 4px 20px rgba(26,58,92,0.55);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+  touch-action: none; user-select: none;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-#aiFab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(26,58,92,0.6); }
-#aiFab .ai-badge {
-  position: absolute; top: -3px; right: -3px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: #B8860B; font-size: 9px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  color: white; border: 2px solid white;
+#aiFab:hover  { transform: scale(1.06); box-shadow: 0 6px 26px rgba(26,58,92,0.65); }
+#aiFab:active { cursor: grabbing; }
+#aiFab .ai-fab-label {
+  font-size: 8px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; color: #B8D4F0; line-height: 1;
+  font-family: var(--sans);
 }
 
 /* ── AI CHAT PANEL ── */
@@ -3436,10 +3436,10 @@ document.addEventListener('visibilitychange', () => {
 .q-ai-btn:hover { background: #E8F0FE; }
 </style>
 
-<!-- ── AI FLOATING BUTTON ── -->
-<button id="aiFab" onclick="openAiPanel()" title="Ask your Bible Study Assistant — hold to drag" style="display:flex;position:fixed;bottom:152px;right:18px;z-index:491">
-  🤖
-  <span class="ai-badge">AI</span>
+<!-- ── AI FLOATING BUTTON — rebuilt clean ── -->
+<button id="aiFab" onclick="openAiPanel()" title="AI Bible Study Assistant — hold & drag to move">
+  <span style="font-size:24px;line-height:1">🤖</span>
+  <span class="ai-fab-label">AI</span>
 </button>
 
 <!-- ── AI CHAT PANEL ── -->
