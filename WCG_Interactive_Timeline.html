@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Interactive Timeline — Walk Courageously With God</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --jw-brown:    #8B3A0F;
+    --jw-orange:   #C0530A;
+    --jw-blue:     #2E6DA4;
+    --jw-blue-ref: #1A75B8;
+    --jw-divider:  #A0440E;
+    --jw-bg:       #FFFFFF;
+    --jw-input-bg: #E8E8E8;
+    --jw-input-border: #CCCCCC;
+    --jw-text:     #1A1A1A;
+    --jw-sub:      #444444;
+    --jw-label:    #555555;
+    --jw-sidebar:  #F5F0EB;
+    --jw-sidebar-border: #D4C5B0;
+    --jw-badge-bg: #F0E8DC;
+    --serif:       'Noto Serif', Georgia, serif;
+    --sans:        'Source Sans 3', 'Helvetica Neue', sans-serif;
+
+    /* Era colors */
+    --era1: #6B5B95;  /* Pre-Flood — deep violet */
+    --era2: #2E6DA4;  /* Patriarchs — blue */
+    --era3: #3A7A5C;  /* Exodus/Conquest — green */
+    --era4: #C0530A;  /* Judges — orange */
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    color: var(--jw-text);
+    background: #F2EDE8;
+    line-height: 1.5;
+    padding-bottom: 40px;
+  }
+
+  /* ── HEADER ── */
+  .tl-header {
+    background: linear-gradient(135deg, #1A3A5C 0%, #2A5A8C 60%, #1A3A5C 100%);
+    padding: 24px 20px 20px;
+    color: white;
+  }
+  .tl-header .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: #8FC3E8; margin-bottom: 8px;
+  }
+  .tl-header h1 {
+    font-family: var(--serif); font-size: 24px; color: #F5EDD5;
+    margin-bottom: 4px;
+  }
+  .tl-header .sub { font-size: 13px; color: #9BC0DC; font-style: italic; }
+
+  /* ── CONTROLS BAR ── */
+  .controls {
+    background: white; border-bottom: 1px solid var(--jw-sidebar-border);
+    padding: 12px 16px; display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .zoom-btns { display: flex; gap: 4px; margin-left: auto; }
+  .zoom-btns button, .view-btn {
+    background: var(--jw-sidebar); border: 1px solid var(--jw-sidebar-border);
+    color: var(--jw-brown); padding: 6px 12px; border-radius: 6px;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans);
+  }
+  .zoom-btns button:hover, .view-btn:hover { background: var(--jw-badge-bg); }
+  .view-btn.active { background: var(--jw-brown); color: white; border-color: var(--jw-brown); }
+  .era-filter {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .era-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 14px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent; transition: all 0.15s;
+    background: var(--jw-sidebar); color: var(--jw-sub);
+  }
+  .era-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .era-chip.active { border-color: currentColor; }
+  .era-chip[data-era="1"].active { color: var(--era1); background: #6B5B9518; }
+  .era-chip[data-era="2"].active { color: var(--era2); background: #2E6DA418; }
+  .era-chip[data-era="3"].active { color: var(--era3); background: #3A7A5C18; }
+  .era-chip[data-era="4"].active { color: var(--era4); background: #C0530A18; }
+
+  /* ── WORLD POWER BAND ── */
+  .power-band-wrap {
+    background: #F7F3EE; padding: 10px 16px 4px;
+    border-bottom: 1px solid var(--jw-sidebar-border);
+    overflow-x: auto;
+  }
+  .power-band-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--jw-label); margin-bottom: 6px;
+  }
+  .power-band {
+    display: flex; min-width: 1600px; height: 28px; border-radius: 4px;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .power-seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: white;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 0 6px; cursor: default;
+  }
+
+  /* ── TIMELINE CONTAINER ── */
+  .tl-scroll {
+    overflow-x: auto; overflow-y: hidden;
+    background: white;
+    padding: 30px 0 10px;
+    position: relative;
+  }
+  .tl-track {
+    position: relative;
+    min-width: 1600px;
+    height: auto;
+    padding: 0 40px;
+  }
+  .tl-axis-line {
+    position: absolute; top: 50%; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--era1), var(--era2), var(--era3), var(--era4));
+    border-radius: 2px; transform: translateY(-50%);
+  }
+
+  /* ── CHARACTER NODES ── */
+  .char-node {
+    position: absolute; top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; transition: all 0.2s; z-index: 5;
+  }
+  .char-node.above { flex-direction: column-reverse; }
+  .char-node .node-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: all 0.2s;
+  }
+  .char-node:hover .node-dot { transform: scale(1.4); box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+  .char-node .node-line { width: 1.5px; height: 22px; background: var(--jw-sidebar-border); }
+  .char-node .node-label {
+    font-size: 10px; font-weight: 700; color: var(--jw-text);
+    background: white; padding: 2px 6px; border-radius: 4px;
+    white-space: nowrap; margin-top: 2px; margin-bottom: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+  }
+  .char-node:hover .node-label { background: var(--jw-badge-bg); }
+  .char-node.dimmed { opacity: 0.15; pointer-events: none; }
+  .char-node.read .node-dot { box-shadow: 0 0 0 3px #3A7A5C40, 0 2px 6px rgba(0,0,0,0.25); }
+  .char-node.read .node-label::after { content: ' ✓'; color: #3A7A5C; }
+
+  /* ── ERA LABELS ON TRACK ── */
+  .era-band-label {
+    position: absolute; top: -22px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--jw-label);
+  }
+
+  /* ── CHARACTER DETAIL PANEL ── */
+  .detail-panel {
+    background: var(--jw-bg);
+    border-top: 4px solid var(--jw-divider);
+    margin: 0;
+    padding: 0;
+    display: none;
+  }
+  .detail-panel.open { display: block; animation: slideDown 0.25s ease; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .detail-inner { padding: 20px; max-width: 700px; margin: 0 auto; }
+  .detail-close {
+    float: right; background: var(--jw-sidebar); border: none;
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    font-size: 14px; color: var(--jw-brown); font-weight: 700;
+  }
+  .detail-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--jw-orange); margin-bottom: 4px;
+  }
+  .detail-title {
+    font-family: var(--serif); font-size: 22px; font-weight: 700;
+    color: var(--jw-text); margin-bottom: 2px;
+  }
+  .detail-sub {
+    font-family: var(--serif); font-style: italic; font-size: 14px;
+    color: var(--jw-sub); margin-bottom: 14px;
+  }
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .detail-cell {
+    background: var(--jw-sidebar); border-radius: 6px; padding: 8px 12px;
+  }
+  .detail-cell label {
+    display: block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--jw-label); margin-bottom: 2px;
+  }
+  .detail-cell span { font-size: 13px; color: var(--jw-text); font-weight: 600; }
+  .detail-context {
+    font-size: 13px; color: var(--jw-sub); line-height: 1.6; margin-bottom: 14px;
+    padding: 12px 14px; background: var(--jw-badge-bg);
+    border-left: 3px solid var(--jw-orange); border-radius: 0 4px 4px 0;
+  }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .detail-actions button {
+    background: var(--jw-brown); color: white; border: none;
+    padding: 9px 16px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: var(--sans);
+  }
+  .detail-actions button.secondary {
+    background: white; color: var(--jw-brown); border: 1.5px solid var(--jw-brown);
+  }
+  .mark-read-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--jw-sub); margin-left: auto; }
+
+  /* ── LIST VIEW (mobile-friendly alternative) ── */
+  .list-view { display: none; padding: 16px; }
+  .list-view.active { display: block; }
+  .list-era-group { margin-bottom: 20px; }
+  .list-era-title {
+    font-family: var(--serif); font-size: 16px; font-weight: 700;
+    padding: 8px 12px; border-radius: 6px; color: white; margin-bottom: 8px;
+  }
+  .list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border: 1px solid var(--jw-sidebar-border);
+    border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+    background: white; transition: all 0.15s;
+  }
+  .list-item:hover { background: var(--jw-sidebar); border-color: var(--jw-brown); }
+  .list-item .li-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .list-item .li-text { flex: 1; }
+  .list-item .li-name { font-size: 13px; font-weight: 700; color: var(--jw-text); }
+  .list-item .li-meta { font-size: 11px; color: var(--jw-label); }
+  .list-item .li-check { color: #3A7A5C; font-size: 14px; }
+
+  /* ── PROGRESS SUMMARY ── */
+  .progress-summary {
+    display: flex; gap: 16px; padding: 14px 20px; background: #F7F3EE;
+    border-top: 1px solid var(--jw-sidebar-border); flex-wrap: wrap;
+  }
+  .ps-item { font-size: 12px; color: var(--jw-label); }
+  .ps-item strong { color: var(--jw-brown); font-size: 14px; }
+
+  /* ── LEGEND ── */
+  .legend-hint {
+    text-align: center; font-size: 11px; color: var(--jw-label);
+    padding: 8px; font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .controls { padding: 10px; }
+    .zoom-btns { display: none; }
+    .detail-inner { padding: 16px; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="tl-header">
+  <div class="eyebrow">Section 1 · Patriarchs to Judges</div>
+  <h1>📍 Interactive Bible Timeline</h1>
+  <div class="sub">Walk Courageously With God — Chapters 1–21</div>
+</div>
+
+<div class="controls">
+  <button class="view-btn active" id="btnTimeline" onclick="setView('timeline')">📊 Timeline</button>
+  <button class="view-btn" id="btnList" onclick="setView('list')">📋 List</button>
+  <div class="era-filter" id="eraFilter"></div>
+  <div class="zoom-btns">
+    <button onclick="zoom(0.8)">−</button>
+    <button onclick="zoom(1.25)">+</button>
+    <button onclick="resetZoom()">Reset</button>
+  </div>
+</div>
+
+<div class="power-band-wrap" id="powerBandWrap">
+  <div class="power-band-label">World Powers &amp; Dominant Cultures</div>
+  <div class="power-band" id="powerBand"></div>
+</div>
+
+<div class="tl-scroll" id="tlScroll">
+  <div class="tl-track" id="tlTrack">
+    <div class="tl-axis-line"></div>
+  </div>
+</div>
+
+<div class="legend-hint">Tap any character to see historical context · Era colors match chapter sections</div>
+
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-inner" id="detailInner"></div>
+</div>
+
+<div class="list-view" id="listView"></div>
+
+<div class="progress-summary">
+  <div class="ps-item"><strong id="psRead">0</strong> of 21 characters explored</div>
+  <div class="ps-item"><strong id="psEra">4</strong> historical eras covered</div>
+  <div class="ps-item"><strong>~2,400 years</strong> spanned (Enoch → Samuel)</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA MODEL — Section 1 Characters (Patriarchs to Judges)
+// Years are approximate, before common era (BCE), per Bible chronology
+// ═══════════════════════════════════════════════════════════
+const CHARACTERS = [
+  { id:'ch1',  name:'Enoch',                 ch:1,  year:-3300, era:1, title:'He Walked With God',
+    context:'7th generation from Adam. Lived alongside Adam for 308 years. First prophet — warned of coming judgment in a violent, godless world.',
+    power:'No organized empire — Cainite civilization dominated culturally' },
+  { id:'ch2',  name:'Noah',                  ch:2,  year:-2500, era:1, title:'He Condemned the World',
+    context:'10th generation from Adam. Built the ark over decades amid mockery and Nephilim violence. His faithfulness condemned his entire generation.',
+    power:'Nephilim ("Fellers") dominated; pre-Babel, no nations yet' },
+  { id:'ch3',  name:'Sarah',                 ch:3,  year:-2000, era:2, title:'She Refused to Look Back',
+    context:'Wife of Abraham. Left the prosperous city of Ur for a nomadic life in Canaan, trusting Jehovah\'s promise of a homeland.',
+    power:'Ur of the Chaldeans (Sumerian city-state) — highly advanced urban culture' },
+  { id:'ch4',  name:'Abraham',               ch:4,  year:-1990, era:2, title:'The First Man to Wage a Righteous War',
+    context:'Rescued his nephew Lot from four kings with a small household militia — demonstrating both courage and reliance on Jehovah.',
+    power:'Mesopotamian city-state alliances (Elam, Shinar, Ellasar, Goiim)' },
+  { id:'ch5',  name:'Abraham',               ch:5,  year:-1980, era:2, title:'He Faced His Hardest Challenge',
+    context:'Commanded to offer Isaac on Mount Moriah — the ultimate test of faith, foreshadowing God\'s own sacrifice of his Son.',
+    power:'Canaanite city-states; Egypt as regional power to the south' },
+  { id:'ch6',  name:'Rebekah',               ch:6,  year:-1960, era:2, title:'She Ventured Into the Unknown',
+    context:'Left her family in Paddan-aram to marry Isaac, a man she had never met, trusting Jehovah\'s guidance through Abraham\'s servant.',
+    power:'Aramean tribal region (Paddan-aram / Haran)' },
+  { id:'ch7',  name:'Jacob',                 ch:7,  year:-1900, era:2, title:'He Faced Danger to Protect His Family',
+    context:'Wrestled with an angel and faced reconciliation with Esau, whom he had wronged 20 years earlier — courage to confront the past.',
+    power:'Canaan under regional tribal chieftains' },
+  { id:'ch8',  name:'Joseph',                ch:8,  year:-1880, era:2, title:'He Resisted Temptation',
+    context:'Sold into slavery by his brothers, resisted Potiphar\'s wife, and rose to become Egypt\'s second-in-command under Pharaoh.',
+    power:'Egypt — Middle Kingdom, a major ancient superpower' },
+  { id:'ch9',  name:'Shiphrah, Puah & Family', ch:9, year:-1530, era:3, title:'They Refused to Fear Man',
+    context:'Hebrew midwives defied Pharaoh\'s genocide order; Moses\' parents hid him; his sister Miriam bravely watched over him at the river.',
+    power:'Egypt — New Kingdom, peak imperial power, enslaving the Israelites' },
+  { id:'ch10', name:'Moses',                 ch:10, year:-1530, era:3, title:'He Made His Choice',
+    context:'Raised in Pharaoh\'s household, Moses chose to identify with his enslaved people rather than enjoy Egyptian privilege.',
+    power:'Egypt — New Kingdom (likely 18th Dynasty)' },
+  { id:'ch11', name:'Moses',                 ch:11, year:-1513, era:3, title:'"Go In to Pharaoh"',
+    context:'Confronted Pharaoh repeatedly, demanding Israel\'s release, through ten devastating plagues that broke Egyptian power.',
+    power:'Egypt — New Kingdom, at the height of its military might' },
+  { id:'ch12', name:'Caleb',                 ch:12, year:-1512, era:3, title:'He Fought Loyally for His God',
+    context:'One of only two faithful spies among twelve sent into Canaan; waited 40 extra years to finally claim his inheritance at age 85.',
+    power:'Canaanite city-states with fortified, "giant"-inhabited cities' },
+  { id:'ch13', name:'Joshua',                ch:13, year:-1473, era:3, title:'He Followed Unusual Instructions',
+    context:'Led Israel across the Jordan and conquered Jericho by marching around its walls for seven days — pure obedience over military logic.',
+    power:'Canaanite city-state confederation; Jericho a major fortified city' },
+  { id:'ch14', name:'Rahab',                 ch:14, year:-1473, era:3, title:'She Chose Jehovah Over Her Own People',
+    context:'A Canaanite woman in Jericho who hid Israelite spies, risking execution, because she recognized Jehovah as the true God.',
+    power:'Jericho — fortified Canaanite city-state, soon to fall' },
+  { id:'ch15', name:'Naomi & Ruth',          ch:15, year:-1150, era:4, title:'They Faced Tragedy Together',
+    context:'Naomi lost her husband and sons in Moab; her Moabite daughter-in-law Ruth chose loyalty to Naomi and to Jehovah over her homeland.',
+    power:'Period of the Judges — Israel decentralized; Moab a regional kingdom' },
+  { id:'ch16', name:'Barak & Deborah',       ch:16, year:-1230, era:4, title:'"I Will Certainly Go With You"',
+    context:'Deborah, a prophetess and judge, rallied Barak to battle against Canaanite General Sisera\'s 900 iron chariots.',
+    power:'Canaanite city-state of Hazor under King Jabin, dominant in the north' },
+  { id:'ch17', name:'Jael',                  ch:17, year:-1230, era:4, title:'"Most Blessed of Women"',
+    context:'A Kenite woman who killed the fleeing General Sisera in her tent, fulfilling Deborah\'s prophecy that a woman would get the credit.',
+    power:'Same era as Barak/Deborah — Canaanite military collapse' },
+  { id:'ch18', name:'Gideon',                ch:18, year:-1180, era:4, title:'Courageous and Cautious',
+    context:'Reduced his army from 32,000 to just 300 men at Jehovah\'s direction, then routed the vast Midianite camel-raiding hordes.',
+    power:'Midianite and Amalekite nomadic confederations raiding Israel' },
+  { id:'ch19', name:'Jephthah & Daughter',   ch:19, year:-1100, era:4, title:'They Fulfilled a Difficult Vow',
+    context:'Jephthah, a former outcast, led Israel against the Ammonites; his daughter willingly honored his vow of dedicated service.',
+    power:'Ammonite kingdom east of the Jordan, pressing into Israelite territory' },
+  { id:'ch20', name:'Samson',                ch:20, year:-1075, era:4, title:'He Found Courage in a Time of Weakness',
+    context:'Despite his failures and Delilah\'s betrayal, Samson\'s final prayer for renewed strength brought down the Philistine temple.',
+    power:'Philistine city-state confederation (Pentapolis) — Israel\'s chief oppressor' },
+  { id:'ch21', name:'Samuel',                ch:21, year:-1070, era:4, title:'A Boy Who Spoke Up for Jehovah',
+    context:'As a young boy serving at the tabernacle under corrupt priest Eli, Samuel courageously delivered Jehovah\'s judgment message.',
+    power:'Philistines dominant militarily; Israel\'s priesthood corrupted under Eli\'s sons' },
+];
+
+const ERAS = {
+  1: { name:'Pre-Flood',          color:'#6B5B95', range:'~3300–2400 BCE' },
+  2: { name:'Patriarchs',         color:'#2E6DA4', range:'~2000–1880 BCE' },
+  3: { name:'Exodus & Conquest',  color:'#3A7A5C', range:'~1530–1470 BCE' },
+  4: { name:'Judges',             color:'#C0530A', range:'~1230–1070 BCE' },
+};
+
+const POWER_SEGMENTS = [
+  { label:'Pre-Flood World',        color:'#6B5B95', start:-3300, end:-2400 },
+  { label:'Mesopotamian City-States', color:'#7A6FA0', start:-2400, end:-1990 },
+  { label:'Canaanite Tribal Lands', color:'#2E6DA4', start:-1990, end:-1880 },
+  { label:'Egyptian Empire (Middle/New Kingdom)', color:'#1F5C8C', start:-1880, end:-1473 },
+  { label:'Canaanite City-States',  color:'#3A7A5C', range:'r', start:-1473, end:-1230 },
+  { label:'Philistine & Regional Powers (Judges Era)', color:'#C0530A', start:-1230, end:-1070 },
+];
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+let zoomLevel = 1;
+let activeEras = new Set([1,2,3,4]);
+let currentView = 'timeline';
+let readSet = new Set(JSON.parse(localStorage.getItem('wcg_tl_read') || '[]'));
+
+const minYear = -3400, maxYear = -1000;
+function yearToX(year, trackWidth) {
+  return ((year - minYear) / (maxYear - minYear)) * trackWidth;
+}
+
+function renderEraFilter() {
+  const el = document.getElementById('eraFilter');
+  el.innerHTML = Object.entries(ERAS).map(([id, e]) => `
+    <div class="era-chip ${activeEras.has(+id) ? 'active' : ''}" data-era="${id}" onclick="toggleEra(${id})">
+      <span class="dot" style="background:${e.color}"></span>${e.name}
+    </div>`).join('');
+}
+
+function toggleEra(id) {
+  if (activeEras.has(id)) activeEras.delete(id); else activeEras.add(id);
+  if (activeEras.size === 0) activeEras = new Set([1,2,3,4]); // prevent empty
+  renderEraFilter();
+  renderTimeline();
+  renderList();
+}
+
+function renderPowerBand() {
+  const band = document.getElementById('powerBand');
+  const total = maxYear - minYear;
+  band.innerHTML = POWER_SEGMENTS.map(seg => {
+    const widthPct = ((seg.end - seg.start) / total) * 100;
+    return `<div class="power-seg" style="width:${widthPct}%; background:${seg.color}" title="${seg.label}">${seg.label}</div>`;
+  }).join('');
+}
+
+function renderTimeline() {
+  const track = document.getElementById('tlTrack');
+  const baseWidth = 1520;
+  const trackWidth = baseWidth * zoomLevel;
+  track.style.minWidth = (trackWidth + 80) + 'px';
+
+  let html = '<div class="tl-axis-line"></div>';
+
+  // Era band labels
+  Object.entries(ERAS).forEach(([id, e]) => {
+    // find approx midpoint of chars in this era
+    const chars = CHARACTERS.filter(c => c.era == id);
+    if (!chars.length) return;
+    const avgYear = chars.reduce((s,c)=>s+c.year,0) / chars.length;
+    const x = yearToX(avgYear, trackWidth);
+    html += `<div class="era-band-label" style="left:${x}px; color:${e.color}">${e.name}</div>`;
+  });
+
+  CHARACTERS.forEach((c, i) => {
+    const x = yearToX(c.year, trackWidth);
+    const dimmed = !activeEras.has(c.era) ? 'dimmed' : '';
+    const above = i % 2 === 0 ? '' : 'above';
+    const eraColor = ERAS[c.era].color;
+    const isRead = readSet.has(c.id);
+    html += `
+      <div class="char-node ${dimmed} ${above} ${isRead ? 'read' : ''}" style="left:${x}px" onclick="openDetail('${c.id}')">
+        <div class="node-label">${c.name}</div>
+        <div class="node-line"></div>
+        <div class="node-dot" style="background:${eraColor}"></div>
+      </div>`;
+  });
+
+  track.innerHTML = html;
+}
+
+function renderList() {
+  const wrap = document.getElementById('listView');
+  let html = '';
+  Object.entries(ERAS).forEach(([id, e]) => {
+    if (!activeEras.has(+id)) return;
+    const chars = CHARACTERS.filter(c => c.era == id);
+    html += `<div class="list-era-group">
+      <div class="list-era-title" style="background:${e.color}">${e.name} · ${e.range}</div>`;
+    chars.forEach(c => {
+      const isRead = readSet.has(c.id);
+      html += `
+        <div class="list-item" onclick="openDetail('${c.id}')">
+          <div class="li-dot" style="background:${e.color}"></div>
+          <div class="li-text">
+            <div class="li-name">${c.name} — ${c.title}</div>
+            <div class="li-meta">Chapter ${c.ch} · ~${Math.abs(c.year)} BCE</div>
+          </div>
+          ${isRead ? '<span class="li-check">✓</span>' : ''}
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function openDetail(id) {
+  const c = CHARACTERS.find(x => x.id === id);
+  if (!c) return;
+  const e = ERAS[c.era];
+  const isRead = readSet.has(id);
+
+  document.getElementById('detailInner').innerHTML = `
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <div class="detail-eyebrow" style="color:${e.color}">Chapter ${c.ch} · ${e.name} Era</div>
+    <div class="detail-title">${c.title}</div>
+    <div class="detail-sub">${c.name}</div>
+    <div class="detail-grid">
+      <div class="detail-cell"><label>Approx. Date</label><span>~${Math.abs(c.year)} BCE</span></div>
+      <div class="detail-cell"><label>Historical Era</label><span>${e.name}</span></div>
+    </div>
+    <div class="detail-context"><strong>Context:</strong> ${c.context}</div>
+    <div class="detail-context" style="border-left-color:${e.color}"><strong>🌍 Dominant Power:</strong> ${c.power}</div>
+    <div class="detail-actions">
+      <button onclick="goToChapter('${c.id}')">📖 Open Chapter ${c.ch} Worksheet</button>
+      <button class="secondary" onclick="openWOL(${c.ch})">🔗 Read on WOL</button>
+      <label class="mark-read-toggle">
+        <input type="checkbox" ${isRead ? 'checked' : ''} onchange="toggleRead('${id}', this)"> Mark explored
+      </label>
+    </div>
+  `;
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('detailPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+function toggleRead(id, checkbox) {
+  if (checkbox.checked) readSet.add(id); else readSet.delete(id);
+  localStorage.setItem('wcg_tl_read', JSON.stringify([...readSet]));
+  renderTimeline();
+  renderList();
+  updateProgress();
+}
+
+function goToChapter(id) {
+  // In the full app, this would call showChapter(id) in the parent worksheet
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'wcg-open-chapter', chapter: id }, '*');
+  } else {
+    alert('This would jump to the "' + id + '" worksheet panel in the main app.');
+  }
+}
+
+function openWOL(chapterNum) {
+  window.open('https://wol.jw.org/en/wol/publication/r1/lp-e/wcg', '_blank');
+}
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('btnTimeline').classList.toggle('active', view === 'timeline');
+  document.getElementById('btnList').classList.toggle('active', view === 'list');
+  document.getElementById('tlScroll').style.display = view === 'timeline' ? 'block' : 'none';
+  document.getElementById('powerBandWrap').style.display = view === 'timeline' ? 'block' : 'none';
+  document.getElementById('listView').classList.toggle('active', view === 'list');
+}
+
+function zoom(factor) {
+  zoomLevel = Math.max(0.5, Math.min(3, zoomLevel * factor));
+  renderTimeline();
+}
+function resetZoom() {
+  zoomLevel = 1;
+  renderTimeline();
+}
+
+function updateProgress() {
+  document.getElementById('psRead').textContent = readSet.size;
+}
+
+// ── INIT ──
+renderEraFilter();
+renderPowerBand();
+renderTimeline();
+renderList();
+updateProgress();
+</script>
+
+</body>
+</html>
