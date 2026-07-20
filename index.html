@@ -2986,24 +2986,35 @@ async function callClaude(userMessage) {
   const systemPrompt = buildSystemPrompt(aiCurrentChapter);
   aiConversation.push({ role: 'user', content: userMessage });
 
-  // Calls our Netlify function proxy — keeps API key server-side, no CORS issues
-  const response = await fetch('/api/claude', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: aiConversation
-    })
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `API error ${response.status}`);
+  // Calls Netlify serverless function — server-side proxy, no CORS, API key stays secret
+  let response;
+  try {
+    response = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: aiConversation
+      })
+    });
+  } catch (networkErr) {
+    throw new Error('Network error — check your internet connection and try again.');
   }
 
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (parseErr) {
+    throw new Error(`Server returned an unexpected response (HTTP ${response.status}).`);
+  }
+
+  if (!response.ok || data.error) {
+    const msg = data.error?.message || `Server error (HTTP ${response.status})`;
+    throw new Error(msg);
+  }
+
   const assistantText = data.content?.find(b => b.type === 'text')?.text || 'No response received.';
   aiConversation.push({ role: 'assistant', content: assistantText });
   return assistantText;
