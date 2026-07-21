@@ -1667,12 +1667,13 @@ window.addEventListener('beforeunload', saveAll);
           currentLeft = 18;                    // left side
         }
       }
-      // Set top/left; clear bottom/right to avoid conflict with CSS defaults
+      // Apply position — clear bottom/right so they don't fight top/left
+      el.style.cssText = el.style.cssText; // preserve existing inline styles
       el.style.top    = currentTop + 'px';
       el.style.left   = currentLeft + 'px';
       el.style.bottom = 'auto';
       el.style.right  = 'auto';
-      el.style.display = 'flex';   // always visible
+      el.style.display = 'flex';
       if (el.id === 'audioFab') repositionMiniPlayer(currentTop, currentLeft);
     }
 
@@ -2865,7 +2866,7 @@ document.addEventListener('visibilitychange', () => {
 </style>
 
 <!-- ── AI FLOATING BUTTON — rebuilt clean ── -->
-<button id="aiFab" onclick="openAiPanel()" title="AI Bible Study Assistant — hold & drag to move">
+<button id="aiFab" onclick="openAiPanel()" title="AI Bible Study Assistant — hold & drag to move" style="display:flex;position:fixed;bottom:88px;left:18px;top:auto;right:auto;z-index:491;">
   <span style="font-size:24px;line-height:1">🤖</span>
   <span class="ai-fab-label">AI</span>
 </button>
@@ -3313,10 +3314,9 @@ window.addEventListener('popstate', () => {
 <style>
 /* ══ STUDY TOOLS FAB ══════════════════════════════════════════ */
 #studyToolsFab {
+  /* Inline style controls initial position — CSS just sets non-position props */
   position: fixed;
-  /* Default: left side above AI button — JS sets exact position */
-  bottom: 156px; left: 18px;
-  top: auto; right: auto;
+  top: auto; left: auto; bottom: auto; right: auto;
   width: 56px; height: 56px; border-radius: 16px;
   background: linear-gradient(145deg, #2E6B3E 0%, #3A8A50 100%);
   color: white; border: none; font-size: 20px;
@@ -3570,7 +3570,7 @@ window.addEventListener('popstate', () => {
 </style>
 
 <!-- ══ STUDY TOOLS FAB ════════════════════════════════════════ -->
-<button id="studyToolsFab" onclick="openStudyTools('lang')" title="Study Tools — hold to drag">
+<button id="studyToolsFab" onclick="openStudyTools('lang')" title="Study Tools — hold to drag" style="display:flex;position:fixed;bottom:156px;left:18px;top:auto;right:auto;z-index:492;">
   <span style="font-size:22px;line-height:1">📚</span>
   <span class="st-fab-label">Tools</span>
 </button>
