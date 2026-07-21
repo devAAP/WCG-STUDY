@@ -1553,8 +1553,9 @@ window.addEventListener('beforeunload', saveAll);
 
   // Default positions [top, left] in px — stored per FAB
   const DEFAULTS = {
-    audioFab: { side: 'right', bottom: 88  },   // right side
-    aiFab:    { side: 'left',  bottom: 88  },   // left side — separated from audio
+    audioFab:      { side: 'right', bottom: 88  },   // right side
+    aiFab:         { side: 'left',  bottom: 88  },   // left side
+    studyToolsFab: { side: 'left',  bottom: 156 },   // left side, above AI button
   };
 
   // ── LOAD SAVED POSITIONS ───────────────────────────────────
@@ -1652,12 +1653,16 @@ window.addEventListener('beforeunload', saveAll);
         currentTop  = clamped.top;
         currentLeft = clamped.left;
       } else {
-        // Default positions — audio RIGHT, AI LEFT, same vertical level
-        if (el.id === 'audioFab') {
+        // Default positions per FAB — use DEFAULTS map
+        const def = DEFAULTS[el.id];
+        if (def) {
+          const bottomOffset = def.bottom + FAB_SIZE;
+          currentTop  = vh - bottomOffset;
+          currentLeft = def.side === 'right' ? vw - FAB_SIZE - 18 : 18;
+        } else if (el.id === 'audioFab') {
           currentTop  = vh - 100 - FAB_SIZE;
-          currentLeft = vw - FAB_SIZE - 18;   // right side
+          currentLeft = vw - FAB_SIZE - 18;
         } else {
-          // aiFab: bottom-left, same height as audio
           currentTop  = vh - 100 - FAB_SIZE;
           currentLeft = 18;                    // left side
         }
@@ -1780,10 +1785,12 @@ window.addEventListener('beforeunload', saveAll);
 
   // ── INIT when DOM is ready ─────────────────────────────────
   function initDraggable() {
-    const audioFab = document.getElementById('audioFab');
-    const aiFab    = document.getElementById('aiFab');
-    if (audioFab) makeDraggable(audioFab);
-    if (aiFab)    makeDraggable(aiFab);
+    const audioFab      = document.getElementById('audioFab');
+    const aiFab         = document.getElementById('aiFab');
+    const studyToolsFab = document.getElementById('studyToolsFab');
+    if (audioFab)      makeDraggable(audioFab);
+    if (aiFab)         makeDraggable(aiFab);
+    if (studyToolsFab) makeDraggable(studyToolsFab);
   }
 
   if (document.readyState === 'loading') {
@@ -3307,7 +3314,8 @@ window.addEventListener('popstate', () => {
 /* ══ STUDY TOOLS FAB ══════════════════════════════════════════ */
 #studyToolsFab {
   position: fixed;
-  bottom: 88px; left: 84px;
+  /* Default: left side above AI button — JS sets exact position */
+  bottom: 156px; left: 18px;
   top: auto; right: auto;
   width: 56px; height: 56px; border-radius: 16px;
   background: linear-gradient(145deg, #2E6B3E 0%, #3A8A50 100%);
@@ -4183,12 +4191,10 @@ function rateCard(rating) {
 // ════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
-    if (typeof makeDraggable === 'function') {
-      makeDraggable(document.getElementById('studyToolsFab'));
-    }
+    // studyToolsFab is initialised by the main drag engine's initDraggable()
+    // No need to call makeDraggable again here
     initGraph();
     buildLangGrid();
-    buildMapSelector();
   }, 1500);
 });
 
