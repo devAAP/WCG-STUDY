@@ -3,4 +3,8 @@
   functions = "netlify/functions"
 
 [functions]
-  node_bundler = "zisi"
+  node_bundler = "esbuild"
+  included_files = ["quest/js/data/**", "quest/package.json"]
+
+[functions."encourage-cron"]
+  schedule = "@hourly"
